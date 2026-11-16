@@ -3,85 +3,122 @@
 <head>
 <meta charset="utf-8" />
 <style>
-:root{--wait:#ef6a5c;--busy:#4c9ffe;--done:#5cc98f;--now:#e0a640;--side:#a48bd1;--left:color-mix(in srgb,var(--orca-muted-foreground) 70%,transparent);
+:root{--wait:#ef6a5c;--busy:#4c9ffe;--done:#5cc98f;--now:#e0a640;--side:#a48bd1;
   --bg:var(--orca-background);--fg:var(--orca-foreground);--card:var(--orca-card);--line:var(--orca-border);--mut:var(--orca-muted-foreground);
-  --grp:color-mix(in srgb,var(--orca-foreground) 4%,var(--orca-background));--r:var(--orca-radius,8px)}
+  --left:color-mix(in srgb,var(--mut) 70%,transparent);--soft:color-mix(in srgb,var(--fg) 5%,transparent);
+  --grp:color-mix(in srgb,var(--fg) 3%,var(--bg));--acc:var(--orca-accent);--accfg:var(--orca-accent-foreground);
+  --pri:var(--orca-primary);--prifg:var(--orca-primary-foreground);--des:var(--orca-destructive,#e5534b);--rmd:calc(var(--orca-radius,10px) - 2px)}
+/* 오르카 Button 과 같은 규격 (ui/button.tsx 의 xs · default · ghost · destructive-chip) */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:24px;padding:0 8px;border-radius:var(--rmd);font-size:12px;font-weight:500;white-space:nowrap;transition:background-color .15s,color .15s,border-color .15s}
+.btn:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--orca-ring) 50%,transparent)}
+.btn.pri{background:var(--pri);color:var(--prifg)}.btn.pri:hover{background:color-mix(in srgb,var(--pri) 90%,transparent)}
+.btn.ghost{color:var(--mut)}.btn.ghost:hover{background:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--accfg)}
+.btn.dchip{border:1px solid color-mix(in srgb,var(--des) 40%,transparent);background:color-mix(in srgb,var(--des) 10%,transparent);color:var(--des)}
+.btn.dchip:hover{background:color-mix(in srgb,var(--des) 15%,transparent)}
+.btn.dghost{color:var(--des)}.btn.dghost:hover{background:color-mix(in srgb,var(--des) 10%,transparent)}
+.btn.out{border:1px solid var(--orca-input,var(--line));background:color-mix(in srgb,var(--orca-input,var(--line)) 30%,transparent);color:var(--fg)}.btn.out:hover{background:color-mix(in srgb,var(--orca-input,var(--line)) 50%,transparent)}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%}
-body{font:13px/1.45 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;color:var(--fg);background:var(--bg);overflow:auto}
+html,body{margin:0;min-height:100%}
+body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-.wrap{padding:10px 10px 24px}
-.top{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 8px}
-.top b{font-size:13.5px}
-.cnt{font-size:11px;color:var(--mut)}.cnt em{font-style:normal;color:var(--wait);font-weight:600}
-.seg{display:flex;background:color-mix(in srgb,var(--fg) 7%,transparent);border-radius:7px;padding:2px}
-.seg button{flex:1;text-align:center;padding:3px 6px;font-size:11.5px;color:var(--mut);border-radius:5px;white-space:nowrap}
-.seg button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.18)}
-.bar2{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
-.bar2 .seg{flex:1}
-.sel{font:inherit;font-size:11.5px;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:7px;padding:2px 4px}
-.ws{background:var(--grp);border-radius:10px;padding:7px 7px 7px;margin-bottom:9px}
-.wsh{display:flex;align-items:center;gap:6px;width:100%;padding:1px 4px 6px;font-size:12px;font-weight:600;color:color-mix(in srgb,var(--fg) 80%,transparent)}
+/* 스크롤바: 얇고, 바탕 없이, 올렸을 때만 진하게 */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:transparent}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--fg) 16%,transparent);border:3px solid transparent;border-radius:6px;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background-color:color-mix(in srgb,var(--fg) 30%,transparent)}
+.wrap{padding:0 10px 24px}
+
+/* 머리 한 줄: 필터 탭 + 보기 메뉴 */
+.head{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:10px 0 9px;background:var(--bg)}
+.tabs{flex:1;min-width:0;display:flex;gap:2px}
+.tab{display:flex;align-items:center;gap:5px;height:26px;padding:0 8px;border-radius:var(--rmd);font-size:13px;font-weight:500;color:var(--mut);white-space:nowrap;transition:background-color .15s,color .15s}
+.tab b{font-weight:600;font-size:11.5px;color:var(--mut);background:var(--soft);border-radius:999px;padding:0 6px;min-width:18px;text-align:center}
+.tab:hover{color:var(--accfg);background:color-mix(in srgb,var(--acc) 50%,transparent)}
+.tab.on{color:var(--accfg);background:var(--acc)}
+.tab.on b{color:var(--fg);background:color-mix(in srgb,var(--fg) 10%,transparent)}
+.tab.wait.on b{background:var(--wait);color:#fff}
+.vbtn{flex:none;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:var(--rmd);color:var(--mut)}
+.vbtn svg{width:14px;height:14px}
+.vbtn:hover,.vbtn.on{background:color-mix(in srgb,var(--acc) 50%,transparent);color:var(--accfg)}
+.menu{position:absolute;right:0;top:38px;z-index:9;min-width:170px;padding:4px;border-radius:var(--orca-radius,10px);background:var(--orca-popover,var(--card));color:var(--orca-popover-foreground,var(--fg));border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.3)}
+.menu h5{margin:6px 8px 3px;font-size:10.5px;font-weight:600;color:var(--mut)}
+.menu button{display:flex;justify-content:space-between;align-items:center;width:100%;height:28px;padding:0 8px;border-radius:calc(var(--orca-radius,10px) - 4px);font-size:12px;text-align:left}
+.menu button:hover{background:var(--acc);color:var(--accfg)}
+.menu button.on:after{content:"✓";color:var(--mut)}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.sorting{font-size:12px;color:var(--mut);margin:0 2px 8px}
+
+/* 칸(워크스페이스 또는 주제) */
+.ws{background:var(--grp);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:var(--orca-radius,10px);padding:7px;margin-bottom:9px}
+.wsh{display:flex;align-items:center;gap:6px;width:100%;padding:1px 4px 7px;font-size:13px;font-weight:600;color:color-mix(in srgb,var(--fg) 82%,transparent)}
 .wsh .n{color:var(--mut);font-weight:500}.wsh .car{margin-left:auto}
-.chev{display:inline-block;width:6px;height:6px;border:solid var(--mut);border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg);margin-right:6px}
-.chev.up{transform:translateY(1px) rotate(-135deg)}.chev.right{transform:rotate(-45deg)}
 .ws.shut .wsh{padding-bottom:1px}
-.c{position:relative;background:var(--card);border-radius:8px;padding:9px 11px 8px 13px;margin-top:6px;cursor:pointer;border:1px solid transparent}
-.c:first-of-type{margin-top:0}
-.c:hover{border-color:var(--line)}
+.chev{display:inline-block;width:6px;height:6px;border:solid var(--mut);border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg)}
+.chev.right{transform:rotate(-45deg)}
+
+/* 카드 */
+.c{position:relative;background:var(--card);border-radius:var(--rmd);padding:9px 11px 9px 13px;margin-top:6px;cursor:pointer;border:1px solid transparent;transition:border-color .15s ease,transform .15s ease}
+.cards>.c:first-child{margin-top:0}
+.c:hover{border-color:var(--line);transform:translateY(-1px)}
 .c:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:8px 0 0 8px;background:var(--busy)}
 .c.wait:before{background:var(--wait)}
+.c.changed{animation:changed 1.4s ease}
+.c.fresh{animation:fresh .45s cubic-bezier(.16,1,.3,1)}
+@keyframes changed{0%{box-shadow:0 0 0 2px color-mix(in srgb,var(--st,var(--busy)) 60%,transparent)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes fresh{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.c.wait{--st:var(--wait)}
+@media (prefers-reduced-motion:reduce){.c{animation:none!important;transition:none}}
 .hd{display:flex;align-items:center;gap:6px}
-.st{font-size:11.5px;font-weight:600;color:var(--busy)}.wait .st,.st.wait{color:var(--wait)}
-.md{font-size:10.5px;color:var(--mut);background:color-mix(in srgb,var(--fg) 8%,transparent);border-radius:4px;padding:0 5px;white-space:nowrap}
-.tm{margin-left:auto;font-size:10.5px;color:var(--mut);white-space:nowrap}
-.ti{font-weight:600;font-size:13px;margin:3px 0 5px;line-height:1.35;word-break:break-word}
-.warn{font-size:10.5px;color:var(--now);margin:-2px 0 4px}
+.st{font-size:12px;font-weight:600;color:var(--busy)}.wait .st,.st.wait{color:var(--wait)}
+.md{font-size:11px;color:var(--mut);background:var(--soft);border-radius:4px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm{margin-left:auto;font-size:11.5px;color:var(--mut);white-space:nowrap}
+.ti{font-weight:600;font-size:14px;margin:4px 0 6px;line-height:1.35;word-break:break-word}
+.warn{font-size:11.5px;color:var(--now);margin:-2px 0 4px}
 ul.steps{list-style:none;margin:0;padding:0}
-.steps li{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:color-mix(in srgb,var(--fg) 75%,transparent);position:relative;padding:2px 0}
-.steps li i{width:10px;height:10px;margin-top:3px;border-radius:50%;background:var(--done);flex:none;position:relative;z-index:1}
-.steps li:not(:last-child):after{content:"";position:absolute;left:4.5px;top:14px;bottom:-4px;width:1px;background:var(--done)}
+.steps li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:color-mix(in srgb,var(--fg) 75%,transparent);position:relative;padding:2px 0}
+.steps li i{width:10px;height:10px;margin-top:5px;border-radius:50%;background:var(--done);flex:none;position:relative;z-index:1}
+.steps li:not(:last-child):after{content:"";position:absolute;left:4.5px;top:16px;bottom:-4px;width:1px;background:var(--done)}
 .steps li.now{color:var(--fg);font-weight:600}.steps li.now i{background:var(--now);box-shadow:0 0 0 3px color-mix(in srgb,var(--now) 28%,transparent)}
 .steps li.side i{background:var(--side)}
 .steps li.left{color:var(--mut)}.steps li.left i{background:transparent;border:1.5px solid var(--left)}
 .steps li.now:after,.steps li.left:after{background:var(--left)}
-.steps li.gap{color:var(--mut);font-size:11px}.steps li.gap i{background:none;text-align:center;font-style:normal;line-height:8px;margin-top:2px}
+.steps li.gap{color:var(--mut);font-size:12px}.steps li.gap i{background:none;text-align:center;font-style:normal;line-height:8px;margin-top:2px}
 .steps li.gap:after{background:var(--left)}
-.steps small{display:block;color:var(--mut);font-size:11px;font-weight:400;line-height:1.35}
-.more{display:block;width:100%;text-align:center;margin-top:5px;padding-top:4px;border-top:1px solid var(--line);font-size:10.5px;color:var(--mut)}
-.more:hover{color:var(--fg)}
-.subs{font-size:11px;color:var(--mut);margin-top:3px}
-.cact{display:none;justify-content:space-between;align-items:center;margin:6px -11px -8px -13px;padding:5px 10px;border-top:1px solid var(--line);border-radius:0 0 8px 8px;background:color-mix(in srgb,var(--fg) 4%,var(--card))}
-.c:hover .cact,.c.ask .cact{display:flex}
-.ce{font-size:11px;color:var(--orca-destructive,#e5534b)}
-.cg,.go{font-size:11px;background:var(--wait);color:#fff;border-radius:999px;padding:2px 10px;font-weight:600}
-.empty{color:var(--mut);font-size:12px;padding:24px 8px;text-align:center;line-height:1.6}
+.steps small{display:block;color:var(--mut);font-size:12px;font-weight:400;line-height:1.35}
+.subs{font-size:12px;color:var(--mut);margin-top:3px}
+.jump{display:none;width:22px;height:22px;margin:-3px -5px -3px 0;padding:0}
+.jump svg{width:12px;height:12px}
+.c:hover .jump{display:inline-flex}.c:hover .tm{display:none}
+.empty{color:var(--mut);font-size:13px;padding:24px 8px;text-align:center;line-height:1.6}
+
 /* 상세 */
-.drow{display:flex;align-items:center;gap:6px;font-size:11px}
-.drow .wsn{font-weight:600;color:color-mix(in srgb,var(--fg) 80%,transparent)}
-.drow .wh{color:var(--mut)}
-.drow .x{margin-left:auto;color:var(--mut);font-size:11.5px}.drow .x:hover{color:var(--fg)}
+.dbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:9px 0 8px;background:var(--bg);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin-bottom:10px}
+.back .chev{transform:rotate(135deg);margin:0 1px 0 3px}
+.drow{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
+.drow .wsn{font-weight:600;color:color-mix(in srgb,var(--fg) 80%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .wh{color:var(--mut);white-space:nowrap}
 .hero{display:flex;gap:10px;margin-top:10px}
 .ring{flex:none;width:38px;height:38px}
-.hero h2{margin:0;font-size:14.5px;line-height:1.35;word-break:break-word}
-.sum{margin:3px 0 0;font-size:11.5px;color:var(--mut);line-height:1.4}
-.acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:9px}
-.acts .go{border-radius:6px;padding:4px 10px;font-size:11.5px}
-.acts .end{font-size:11.5px;color:var(--orca-destructive,#e5534b);border:1px solid var(--line);border-radius:6px;padding:4px 10px}
-.mline{font-size:11px;color:var(--mut)}.sid{font-size:11px;color:var(--mut);border-bottom:1px dotted var(--mut)}.sid:hover{color:var(--fg)}
-h4{margin:16px 0 6px;font-size:10.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.ask{font-size:11.5px;margin:0 0 5px;color:color-mix(in srgb,var(--fg) 80%,transparent)}.ask b{color:var(--mut);font-weight:600;margin-right:4px}
-.box{background:color-mix(in srgb,var(--fg) 3%,var(--card));border:1px solid var(--line);border-radius:6px;padding:8px;font-size:11.5px;line-height:1.5;word-break:break-word}
+.hero h2{margin:0;font-size:15px;line-height:1.35;word-break:break-word}
+.sum{margin:4px 0 0;font-size:12.5px;color:var(--mut);line-height:1.4}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+.mline{font-size:12px;color:var(--mut);display:inline-flex;align-items:center;gap:2px}
+.sid.btn{height:22px;padding:0 6px;font-size:11.5px;font-weight:400;font-family:ui-monospace,Menlo,monospace}
+h4{margin:20px 0 8px;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.ask{font-size:12.5px;margin:0 0 5px;color:color-mix(in srgb,var(--fg) 80%,transparent)}.ask b{color:var(--mut);font-weight:600;margin-right:4px}
+.box{background:color-mix(in srgb,var(--fg) 3%,var(--card));border:1px solid var(--line);border-radius:var(--rmd);padding:9px 10px;font-size:12.5px;line-height:1.5;word-break:break-word}
 details{margin-top:6px;padding-top:5px;border-top:1px solid var(--line);color:var(--mut);font-size:11px}
-details pre{white-space:pre-wrap;word-break:break-word;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--fg);margin:6px 0 0;max-height:none}
-.helper{margin-bottom:6px}.helper p{margin:3px 0 6px;color:var(--mut);font-size:11px}
-.helper .b{display:flex;gap:6px}.helper .b button{font-size:11px;border:1px solid var(--line);border-radius:5px;padding:1px 8px}
-ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:5px}
-.todo li{display:flex;gap:7px;align-items:flex-start;font-size:11.5px;cursor:pointer}
-.todo li b{flex:none;width:13px;height:13px;border:1.5px solid var(--mut);border-radius:3px;margin-top:2px;position:relative}
+details summary{cursor:pointer}
+details pre{white-space:pre-wrap;word-break:break-word;font:11.5px/1.5 ui-monospace,Menlo,monospace;color:var(--fg);margin:6px 0 0}
+.helper{margin-bottom:6px}.helper p{margin:3px 0 6px;color:var(--mut);font-size:12px}
+.helper .b{display:flex;gap:6px}.helper .b .btn{height:22px;font-size:11.5px}
+ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.todo li{display:flex;gap:8px;align-items:flex-start;font-size:13px;cursor:pointer}
+.todo li b{flex:none;width:14px;height:14px;border:1.5px solid var(--mut);border-radius:4px;margin-top:3px;position:relative}
+.todo li:hover b{border-color:var(--fg)}
 .todo li.done{color:var(--mut);text-decoration:line-through}.todo li.done b{background:var(--done);border-color:var(--done)}
-.todo li.done b:after{content:"";position:absolute;left:3px;top:0;width:4px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
-.todo em{font-style:normal;font-size:10px;color:var(--now);margin-left:4px}
+.todo li.done b:after{content:"";position:absolute;left:3.5px;top:.5px;width:4px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.todo em{font-style:normal;font-size:10px;color:var(--now);margin-left:5px}
 .toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--orca-popover,var(--card));color:var(--orca-popover-foreground,var(--fg));border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11.5px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 </style>
@@ -91,8 +128,10 @@ ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:5px}
 <div class="toast" id="toast"></div>
 <script>
 const app = document.getElementById('app')
-const S = { data: null, error: '', view: 'list', sel: '', filter: 'all', open: new Set(), shut: new Set(), ask: '', listY: 0, full: '' }
+const S = { data: null, error: '', view: 'list', sel: '', filter: 'all', shut: new Set(), ask: '', listY: 0, full: '', menu: false }
 const LABEL = { wait: 'My turn', busy: 'Working' }
+let seen = null // 카드별 지난 내용. 바뀐 카드만 반짝이게 하려고 둔다
+let flash = new Map()
 
 function el(tag, attrs, ...kids) {
   const n = document.createElement(tag)
@@ -104,6 +143,11 @@ function el(tag, attrs, ...kids) {
   }
   for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : String(k))
   return n
+}
+function svgIcon(d) {
+  const ns = 'http://www.w3.org/2000/svg', s = document.createElementNS(ns, 'svg')
+  Object.entries({ width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }).forEach(([k, v]) => s.setAttribute(k, v))
+  const p = document.createElementNS(ns, 'path'); p.setAttribute('d', d); s.append(p); return s
 }
 function ago(sec) {
   const d = Math.max(0, Date.now() / 1000 - (sec || 0))
@@ -118,8 +162,11 @@ async function req(name, input) {
   catch (e) { toast((e && e.message) || 'Failed'); throw e }
 }
 const key = (s) => s.log || s.handle
+const cleanAsk = (t) => (t || '').replace(/<(system-reminder|command-[a-z-]+|local-command-[a-z-]+)>[\s\S]*?(<\/\1>|$)/g, '').replace(/^This session is being continued from a previous conversation[\s\S]*/, '').trim() // 시스템이 넣은 문구는 내가 한 말이 아니다
+const arrow = () => { const i = svgIcon('M7 17L17 7M9 7h8v8'); i.setAttribute('width', 11); i.setAttribute('height', 11); return i }
+const sig = (s) => JSON.stringify([s.status, s.title, s.steps, s.todo, s.reply, (s.subs || []).map((x) => x.state)])
 
-// 카드에 보이는 단계: 바로 앞 1개 · 지금 · 다음 1개 (지금이 없으면 다음 할 일, 그것도 없으면 마지막 셋)
+// 카드에 보이는 단계: 바로 앞 1개 · 지금 · 다음 1개 (지금이 없으면 다음 할 일, 그것도 없으면 마지막 셋). 전체는 상세에서
 function windowOf(steps) {
   if (steps.length <= 3) return [0, steps.length]
   let p = steps.findIndex((f) => f.state === 'now' || f.state === 'blocked')
@@ -129,110 +176,110 @@ function windowOf(steps) {
   return [a, a + 3]
 }
 function stepLi(f, withDetail) {
-  const cls = f.state === 'blocked' ? 'now' : f.state
-  return el('li', { class: cls }, el('i'), el('div', {}, f.label, withDetail && f.detail ? el('small', {}, f.detail) : null))
+  return el('li', { class: f.state === 'blocked' ? 'now' : f.state }, el('i'), el('div', {}, f.label, withDetail && f.detail ? el('small', {}, f.detail) : null))
 }
 
 function card(s) {
-  const steps = s.steps || []
-  const k = key(s), open = S.open.has(k)
-  const [a, b] = open ? [0, steps.length] : windowOf(steps)
-  const list = el('ul', { class: 'steps' },
-    a > 0 ? el('li', { class: 'gap' }, el('i', {}, '⋮'), a + ' earlier step' + (a > 1 ? 's' : '')) : null,
-    steps.slice(a, b).map((f) => stepLi(f, false)))
-  const more = steps.length > 3
-    ? el('button', { class: 'more', onclick: (e) => { e.stopPropagation(); open ? S.open.delete(k) : S.open.add(k); render() } },
-        el('i', { class: 'chev' + (open ? ' up' : '') }), open ? 'Collapse' : 'All ' + steps.length + ' steps')
-    : null
-  const sub = (s.subs || [])[0]
-  const asking = S.ask === s.handle
-  const act = el('div', { class: 'cact' },
-    asking
-      ? [el('button', { class: 'ce', onclick: (e) => { e.stopPropagation(); endSession(s.handle) } }, 'End this session?'),
-         el('button', { class: 'tm', onclick: (e) => { e.stopPropagation(); S.ask = ''; render() } }, 'Cancel')]
-      : [el('button', { class: 'ce', onclick: (e) => { e.stopPropagation(); S.ask = s.handle; render() } }, 'End session'),
-         el('button', { class: 'cg', onclick: (e) => { e.stopPropagation(); goTo(s.handle) } }, 'Go to session ↗')])
-  return el('div', { class: 'c ' + s.status + (asking ? ' ask' : ''), onclick: () => openDetail(s) },
-    el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since))),
+  const steps = s.steps || [], [a, b] = windowOf(steps), sub = (s.subs || [])[0]
+  return el('div', { class: ['c', s.status, flash.get(key(s))].filter(Boolean).join(' '), onclick: () => openDetail(s) },
+    el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since)),
+      el('button', { class: 'btn ghost jump', title: 'Go to session', onclick: (e) => { e.stopPropagation(); goTo(s.handle) } }, arrow())),
     el('div', { class: 'ti' }, s.title || '(untitled)'),
     s.stuck ? el('div', { class: 'warn' }, 'No progress for a while') : null,
     s.fail ? el('div', { class: 'warn' }, 'Summary failed') : null,
-    steps.length ? list : el('div', { class: 'subs' }, s.note || ''),
-    more,
-    sub ? el('div', { class: 'subs' }, '↳ ' + sub.who + ' · ', el('b', {}, sub.state === 'busy' ? 'Working' : 'Done')) : null,
-    act)
+    steps.length
+      ? el('ul', { class: 'steps' },
+          a > 0 ? el('li', { class: 'gap' }, el('i', {}, '⋮'), a + ' earlier step' + (a > 1 ? 's' : '')) : null,
+          steps.slice(a, b).map((f) => stepLi(f, false)))
+      : el('div', { class: 'subs' }, s.note || ''),
+    sub ? el('div', { class: 'subs' }, '↳ ' + sub.who + ' · ', el('b', {}, sub.state === 'busy' ? 'Working' : 'Done')) : null)
 }
 
+// 보드와 같은 순서: 카드는 내 차례 먼저(Newest 면 최근에 내 차례가 된 것부터, Longest wait 면 오래 기다린 것부터), 칸은 맨 위 카드가 앞서는 칸부터
 function sortKey(s, sort) {
   const o = s.order || [1, 0]
   return sort === 'recent' && o[0] === 0 ? [0, -o[1]] : o
 }
-function cmp(x, y) { return x[0] - y[0] || x[1] - y[1] }
+const cmp = (x, y) => x[0] - y[0] || x[1] - y[1]
+
+function header(all, sort, group) {
+  const n = { wait: 0, busy: 0 }
+  all.forEach((s) => { n[s.status] = (n[s.status] || 0) + 1 })
+  const tab = (v, t, c) => el('button', { class: 'tab ' + v + (S.filter === v ? ' on' : ''), onclick: () => { S.filter = v; render() } }, t, el('b', {}, c))
+  const opt = (on, t, fn) => el('button', { class: on ? 'on' : null, onclick: () => { S.menu = false; fn() } }, t)
+  return el('div', { class: 'head' },
+    el('div', { class: 'tabs' }, tab('all', 'All', all.length), tab('wait', 'My turn', n.wait), tab('busy', 'Working', n.busy)),
+    el('button', { class: 'vbtn' + (S.menu ? ' on' : ''), title: 'Sort and group', onclick: (e) => { e.stopPropagation(); S.menu = !S.menu; render() } },
+      svgIcon('M3 6h18M6 12h12M10 18h4')),
+    S.menu ? el('div', { class: 'menu', onclick: (e) => e.stopPropagation() },
+      el('h5', {}, 'Sort'),
+      opt(sort === 'recent', 'Newest', () => setConfig({ sort: 'recent' })),
+      opt(sort === 'wait', 'Longest wait', () => setConfig({ sort: 'wait' })),
+      el('hr'),
+      el('h5', {}, 'Group by'),
+      opt(group !== 'ai', 'Location', () => setConfig({ group_by: 'location' })),
+      opt(group === 'ai', 'AI topics', () => setConfig({ group_by: 'ai' }))) : null)
+}
 
 function renderList() {
   const d = S.data, all = d.sessions || [], sort = d.sort || 'recent', group = d.group_by || 'location'
-  const n = { wait: 0, busy: 0 }
-  all.forEach((s) => { n[s.status] = (n[s.status] || 0) + 1 })
-  const shown = all.filter((s) => S.filter === 'all' || s.status === S.filter).sort((x, y) => cmp(sortKey(x, sort), sortKey(y, sort)))
+  let shown = all.filter((s) => S.filter === 'all' || s.status === S.filter).sort((x, y) => cmp(sortKey(x, sort), sortKey(y, sort)))
+  const pending = group === 'ai' ? shown.filter((s) => s.ws === 'Unsorted') : []
+  if (pending.length) shown = shown.filter((s) => s.ws !== 'Unsorted') // 보드처럼 분류 전 세션은 칸 없이 숫자만
   const groups = new Map()
   for (const s of shown) {
-    const g = s.ws === 'Unsorted' && group === 'ai' ? 'Sorting…' : (s.ws || 'Other')
+    const g = s.ws || 'Other'
     if (!groups.has(g)) groups.set(g, [])
     groups.get(g).push(s)
   }
-  const seg = (items, cur, pick) => el('div', { class: 'seg' }, items.map(([v, t]) => el('button', { class: v === cur ? 'on' : null, onclick: () => pick(v) }, t)))
-  const sortSel = el('select', { class: 'sel', title: 'Sort', onchange: (e) => setConfig({ sort: e.target.value }) },
-    [['recent', 'Newest'], ['wait', 'Longest wait']].map(([v, t]) => { const o = el('option', { value: v }, t); if (v === sort) o.selected = true; return o }))
-  const body = shown.length
+  const body = groups.size
     ? [...groups].map(([g, list]) => {
         const shut = S.shut.has(g)
         return el('div', { class: 'ws' + (shut ? ' shut' : '') },
           el('button', { class: 'wsh', onclick: () => { shut ? S.shut.delete(g) : S.shut.add(g); render() } }, g, el('span', { class: 'n' }, list.length), el('i', { class: 'chev car' + (shut ? ' right' : '') })),
-          shut ? null : list.map(card))
+          shut ? null : el('div', { class: 'cards' }, list.map(card)))
       })
     : el('p', { class: 'empty' }, all.length ? 'No sessions here.' : 'The sea is calm · no sessions running.')
-  return [
-    el('div', { class: 'top' }, el('b', {}, 'Spyhop'), el('span', { class: 'cnt' }, el('em', {}, n.wait + ' My turn'), ' · ' + n.busy + ' Working')),
-    seg([['all', 'All ' + all.length], ['wait', 'My turn ' + n.wait], ['busy', 'Working ' + n.busy]], S.filter, (v) => { S.filter = v; render() }),
-    el('div', { class: 'bar2' }, seg([['location', 'Location'], ['ai', 'AI topics']], group, (v) => setConfig({ group_by: v })), sortSel),
-    body]
+  return [header(all, sort, group), pending.length ? el('p', { class: 'sorting' }, pending.length + ' new · sorting') : null, body]
 }
 
 function ring(done, total) {
   const ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg')
   svg.setAttribute('viewBox', '0 0 36 36'); svg.setAttribute('class', 'ring')
   const c = (stroke, dash) => { const e = document.createElementNS(ns, 'circle'); Object.entries({ cx: 18, cy: 18, r: 15.5, fill: 'none', stroke, 'stroke-width': 3, 'stroke-linecap': 'round', transform: 'rotate(-90 18 18)' }).forEach(([k, v]) => e.setAttribute(k, v)); if (dash) e.setAttribute('stroke-dasharray', dash); return e }
-  svg.append(c('color-mix(in srgb, currentColor 18%, transparent)'), c('var(--done)', (total ? 97.4 * done / total : 0).toFixed(1) + ' 97.4'))
+  svg.append(c('color-mix(in srgb, currentColor 16%, transparent)'), c('var(--done)', (total ? 97.4 * done / total : 0).toFixed(1) + ' 97.4'))
   const t = document.createElementNS(ns, 'text'); Object.entries({ x: 18, y: 21.5, 'text-anchor': 'middle', 'font-size': 9, fill: 'currentColor' }).forEach(([k, v]) => t.setAttribute(k, v)); t.textContent = done + '/' + total
   svg.append(t); return svg
 }
 
 function renderDetail(s) {
   const steps = s.steps || [], todo = s.todo || [], subs = s.subs || [], log = (s.log || '').split('/').pop()
-  const asking = S.ask === s.handle
+  const asking = S.ask === s.handle, where = s.where || 'Orca'
   return [
-    el('div', { class: 'drow' }, el('span', { class: 'st ' + s.status }, LABEL[s.status] || s.status), el('span', { class: 'wsn' }, s.ws), (s.ws || '').endsWith(s.where || 'Orca') ? null : el('span', { class: 'wh' }, '· ' + (s.where || 'Orca')),
-      el('button', { class: 'x', onclick: closeDetail }, 'Close ✕')),
+    el('div', { class: 'dbar' },
+      el('button', { class: 'btn ghost back', onclick: closeDetail }, el('i', { class: 'chev' }), 'Board'),
+      el('div', { class: 'drow' }, el('span', { class: 'st ' + s.status }, LABEL[s.status] || s.status), el('span', { class: 'wsn' }, s.ws),
+        (s.ws || '').endsWith(where) ? null : el('span', { class: 'wh' }, '· ' + where))),
     el('div', { class: 'hero' }, ring(s.done || 0, s.total || steps.length), el('div', {}, el('h2', {}, s.title || '(untitled)'), s.summary ? el('p', { class: 'sum' }, s.summary) : null)),
     el('div', { class: 'acts' },
-      el('button', { class: 'go', onclick: () => goTo(s.handle) }, 'Go to session ↗'),
+      el('button', { class: 'btn pri', onclick: () => goTo(s.handle) }, 'Go to session', arrow()),
       asking
-        ? [el('button', { class: 'end', onclick: () => endSession(s.handle) }, 'End this session?'), el('button', { class: 'mline', onclick: () => { S.ask = ''; render() } }, 'Cancel')]
-        : el('button', { class: 'end', onclick: () => { S.ask = s.handle; render() } }, 'End session'),
+        ? [el('button', { class: 'btn dchip', onclick: () => endSession(s.handle) }, 'End this session'), el('button', { class: 'btn ghost', onclick: () => { S.ask = ''; render() } }, 'Cancel')]
+        : el('button', { class: 'btn dghost', onclick: () => { S.ask = s.handle; render() } }, 'End session'),
       el('span', { class: 'mline' }, s.model || '', s.model && s.sid ? ' · ' : '',
-        s.sid ? el('button', { class: 'sid', title: 'Copy: ' + s.resume, onclick: () => req('spyhop.copy', { text: s.resume || s.sid }).then(() => toast('Copied')) }, 'ID ' + s.sid.slice(0, 8)) : null)),
+        s.sid ? el('button', { class: 'btn ghost sid', title: 'Copy: ' + (s.resume || s.sid), onclick: () => req('spyhop.copy', { text: s.resume || s.sid }).then(() => toast('Copied: ' + (s.resume || s.sid))) }, 'ID ' + s.sid.slice(0, 8)) : null)),
     el('h4', {}, 'Steps'),
     steps.length ? el('ul', { class: 'steps' }, steps.map((f) => stepLi(f, true))) : el('p', { class: 'sum' }, s.note || 'No steps yet'),
-    (s.reply || s.full || s.ask) ? [el('h4', {}, 'Last reply'),
-      s.ask ? el('p', { class: 'ask' }, el('b', {}, 'You asked'), s.ask) : null,
+    (s.reply || s.full || cleanAsk(s.ask)) ? [el('h4', {}, 'Last reply'),
+      cleanAsk(s.ask) ? el('p', { class: 'ask' }, el('b', {}, 'You asked'), cleanAsk(s.ask)) : null,
       el('div', { class: 'box' }, s.reply || (s.full || '').slice(0, 200),
         s.full ? el('details', { open: S.full === key(s) ? '' : null, ontoggle: (e) => { S.full = e.target.open ? key(s) : '' } }, el('summary', {}, 'Full reply'), el('pre', {}, s.full)) : null)] : null,
     subs.length ? [el('h4', {}, 'Helpers'), subs.map((h) => el('div', { class: 'box helper' },
       el('b', {}, h.who), ' · ' + (h.state === 'busy' ? 'Working' : 'Done'), el('p', {}, h.result || h.what),
-      el('div', { class: 'b' }, el('button', { onclick: () => goTo(h.handle) }, 'Go ↗'),
-        h.state !== 'busy' ? el('button', { onclick: () => endSession(h.handle) }, 'Close') : null)))] : null,
+      el('div', { class: 'b' }, el('button', { class: 'btn out', onclick: () => goTo(h.handle) }, 'Go', arrow()),
+        h.state !== 'busy' ? el('button', { class: 'btn ghost', onclick: () => endSession(h.handle) }, 'Close') : null)))] : null,
     todo.length ? [el('h4', {}, 'TODO'), el('ul', { class: 'todo' }, todo.map((t) =>
-      el('li', { class: t.state === 'done' ? 'done' : null, onclick: () => toggle(s, log, t) }, el('b'), el('span', {}, t.label, t.state === 'open' ? el('em', {}, 'Paused') : null))))] : null]
+      el('li', { class: t.state === 'done' ? 'done' : null, onclick: () => toggle(log, t) }, el('b'), el('span', {}, t.label, t.state === 'open' ? el('em', {}, 'Paused') : null))))] : null]
 }
 
 function render() {
@@ -248,9 +295,10 @@ function render() {
   if (S.view === 'detail' && !s) S.view = 'list'
   app.append(...[S.view === 'detail' ? renderDetail(s) : renderList()].flat(3).filter(Boolean))
   window.scrollTo(0, keepY)
+  flash = new Map() // 한 번만 반짝인다(클릭으로 다시 그릴 때 또 반짝이지 않게)
 }
 
-function openDetail(s) { S.listY = window.scrollY; S.view = 'detail'; S.sel = key(s); S.ask = ''; render(); window.scrollTo(0, 0) }
+function openDetail(s) { S.listY = window.scrollY; S.view = 'detail'; S.sel = key(s); S.ask = ''; S.menu = false; render(); window.scrollTo(0, 0) }
 function closeDetail() { S.view = 'list'; S.ask = ''; render(); window.scrollTo(0, S.listY) }
 
 async function load() {
@@ -258,27 +306,38 @@ async function load() {
     const r = await orca.plugin.request('spyhop.state', {})
     if (r.error) { S.error = r.error; S.data = null } else { S.error = ''; S.data = r.state }
   } catch (e) { S.error = (e && e.message) || 'Could not reach the worker'; S.data = null }
-  if (document.activeElement && document.activeElement.tagName === 'SELECT') return // 고르는 중에는 다시 그리지 않는다
+  // 바뀐 카드는 테두리가 잠깐 빛나고, 새 카드는 미끄러져 들어온다(첫 화면은 그대로)
+  flash = new Map()
+  if (S.data) {
+    const now = new Map((S.data.sessions || []).map((s) => [key(s), sig(s)]))
+    if (seen) for (const [k, v] of now) { if (!seen.has(k)) flash.set(k, 'fresh'); else if (seen.get(k) !== v) flash.set(k, 'changed') }
+    seen = now
+  }
+  if (S.menu) return // 메뉴를 연 동안은 다시 그리지 않는다
   render()
 }
-async function setConfig(c) { await req('spyhop.config', c); await load() }
-async function goTo(h) { const r = await req('spyhop.switch', { handle: h }); if (!r.ok) toast('Could not open that session') }
+async function setConfig(c) { await req('spyhop.config', c).catch(() => null); await load() }
+async function goTo(h) { const r = await req('spyhop.switch', { handle: h }).catch(() => null); if (r && !r.ok) toast('Could not open that session') }
 async function endSession(h) {
   S.ask = ''
   const r = await req('spyhop.close', { handle: h }).catch(() => null)
   if (r && r.ok) { toast('Session ended'); if (S.view === 'detail') closeDetail() }
   await load()
 }
-async function toggle(s, log, t) {
+async function toggle(log, t) {
   const done = t.state !== 'done'
   t.state = done ? 'done' : 'open'; render() // 바로 보이게 하고, 실패하면 다음 갱신에서 원래대로
   await req('spyhop.toggle', { log, label: t.label, done }).catch(() => null)
 }
 
-load()
+load().then(() => { const x = S.data.sessions.find((s) => (s.todo || []).length && s.sid && (s.subs||[]).length) || S.data.sessions.find((s) => (s.todo || []).length && s.sid); openDetail(x) })
 setInterval(() => { if (document.visibilityState === 'visible') load() }, 5000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.view === 'detail') closeDetail() })
+document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return
+  if (S.menu) { S.menu = false; render() } else if (S.view === 'detail') closeDetail()
+})
 </script>
 </body>
 </html>
