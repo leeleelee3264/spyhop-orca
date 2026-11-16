@@ -18,7 +18,9 @@
 .btn.dchip:hover{background:color-mix(in srgb,var(--des) 15%,transparent)}
 .btn.dghost{color:var(--des)}.btn.dghost:hover{background:color-mix(in srgb,var(--des) 10%,transparent)}
 .btn.out{border:1px solid var(--orca-input,var(--line));background:color-mix(in srgb,var(--orca-input,var(--line)) 30%,transparent);color:var(--fg)}.btn.out:hover{background:color-mix(in srgb,var(--orca-input,var(--line)) 50%,transparent)}
-html.dark{--wait:#f97316;--done:#86efac;--side:#a78bfa}
+/* 글자로 쓸 때는 밝은 테마에서 한 단계 진하게(오르카의 --agent-question-text · --status-warning-text 와 같은 방식) */
+:root{--waittx:#c2410c;--busytx:color-mix(in srgb,#ca8a04 70%,var(--orca-foreground))}
+html.dark{--wait:#f97316;--done:#86efac;--side:#a78bfa;--waittx:#f97316;--busytx:#eab308}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
@@ -73,7 +75,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .c.wait{--st:var(--wait)}
 @media (prefers-reduced-motion:reduce){.c{animation:none!important;transition:none}}
 .hd{display:flex;align-items:center;gap:6px}
-.st{font-size:12px;font-weight:600;color:var(--busy)}.wait .st,.st.wait{color:var(--wait)}
+.st{font-size:12px;font-weight:600;color:var(--busytx)}.wait .st,.st.wait{color:var(--waittx)}
 .md{font-size:11px;color:var(--mut);background:var(--soft);border-radius:4px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tm{margin-left:auto;font-size:11.5px;color:var(--mut);white-space:nowrap}
 .ti{font-weight:600;font-size:14px;margin:4px 0 6px;line-height:1.35;word-break:break-word}
@@ -129,7 +131,7 @@ ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .todo li.done{color:var(--mut);text-decoration:line-through}.todo li.done b{background:var(--done);border-color:var(--done)}
 .todo li.done b:after{content:"";position:absolute;left:3.5px;top:.5px;width:4px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
 .todo em{font-style:normal;font-size:10px;color:var(--now);margin-left:5px}
-.foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:14px 2px 0;font-size:11.5px;color:var(--mut)}
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:-2px 2px 10px;font-size:11.5px;color:var(--mut)}
 .foot span{display:inline-flex;align-items:center;gap:5px}
 .lg{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .lg.done{background:var(--done)}.lg.now{background:var(--now)}.lg.side{background:var(--side)}.lg.left{border:1.5px solid var(--left)}
@@ -273,8 +275,8 @@ function renderList() {
           shut ? null : el('div', { class: 'cards' }, list.map(card)))
       })
     : el('p', { class: 'empty' }, all.length ? 'No sessions here.' : 'The sea is calm · no sessions running.')
-  return [header(all, sort, group), pending.length ? el('p', { class: 'sorting' }, pending.length + ' new · sorting') : null,
-    groups.size ? el('div', { class: 'board' }, body) : body, footer(d)]
+  return [header(all, sort, group), footer(d), pending.length ? el('p', { class: 'sorting' }, pending.length + ' new · sorting') : null,
+    groups.size ? el('div', { class: 'board' }, body) : body]
 }
 
 function ring(done, total) {
