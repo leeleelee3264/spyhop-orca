@@ -46,6 +46,11 @@ export default function activate(orca: OrcaWorkerApi): void {
     return { ok: (await post('/close', input.handle)) === 'ok' }
   })
 
+  // 카드를 다른 칸으로 끌어 놓기: 워크스페이스면 그 자리에서 이어 열고, AI 주제면 그 칸에 고정한다(보드의 /move 그대로)
+  orca.panels.handle('spyhop.move', async (input: { h: string; wid: string }) => {
+    return { result: await post('/move', JSON.stringify(input)) }
+  })
+
   orca.panels.handle('spyhop.switch', async (input: { handle: string }) => {
     const res = await fetch(`${BOARD}/switch?h=${encodeURIComponent(input.handle)}`)
     const text = await res.text()

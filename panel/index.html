@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <style>
-:root{--wait:#ef6a5c;--busy:#4c9ffe;--done:#5cc98f;--now:#e0a640;--side:#a48bd1;
+/* 상태 색은 오르카 앱이 쓰는 값 그대로(main.css 의 --agent-question · --agent-working · --status-success · --ai-action-accent). 테마 밝기를 따라 바뀐다 */
+:root{--wait:#ea580c;--busy:#eab308;--done:#147638;--now:#eab308;--side:#8b5cf6;
   --bg:var(--orca-background);--fg:var(--orca-foreground);--card:var(--orca-card);--line:var(--orca-border);--mut:var(--orca-muted-foreground);
   --left:color-mix(in srgb,var(--mut) 70%,transparent);--soft:color-mix(in srgb,var(--fg) 5%,transparent);
   --grp:color-mix(in srgb,var(--fg) 3%,var(--bg));--acc:var(--orca-accent);--accfg:var(--orca-accent-foreground);
@@ -17,6 +18,7 @@
 .btn.dchip:hover{background:color-mix(in srgb,var(--des) 15%,transparent)}
 .btn.dghost{color:var(--des)}.btn.dghost:hover{background:color-mix(in srgb,var(--des) 10%,transparent)}
 .btn.out{border:1px solid var(--orca-input,var(--line));background:color-mix(in srgb,var(--orca-input,var(--line)) 30%,transparent);color:var(--fg)}.btn.out:hover{background:color-mix(in srgb,var(--orca-input,var(--line)) 50%,transparent)}
+html.dark{--wait:#f97316;--done:#86efac;--side:#a78bfa}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
@@ -49,6 +51,8 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .sorting{font-size:12px;color:var(--mut);margin:0 2px 8px}
 
 /* 칸(워크스페이스 또는 주제) */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px;align-items:start}
+.board>.ws{margin-bottom:0}
 .ws{background:var(--grp);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:var(--orca-radius,10px);padding:7px;margin-bottom:9px}
 .wsh{display:flex;align-items:center;gap:6px;width:100%;padding:1px 4px 7px;font-size:13px;font-weight:600;color:color-mix(in srgb,var(--fg) 82%,transparent)}
 .wsh .n{color:var(--mut);font-weight:500}.wsh .car{margin-left:auto}
@@ -84,11 +88,17 @@ ul.steps{list-style:none;margin:0;padding:0}
 .steps li.now:after,.steps li.left:after{background:var(--left)}
 .steps li.gap{color:var(--mut);font-size:12px}.steps li.gap i{background:none;text-align:center;font-style:normal;line-height:8px;margin-top:2px}
 .steps li.gap:after{background:var(--left)}
-.steps small{display:block;color:var(--mut);font-size:12px;font-weight:400;line-height:1.35}
+.steps small{display:block;color:var(--mut);font-size:12px;font-weight:400;line-height:1.4;margin-top:1px}
+.steps.full li{padding:3px 0 7px}
+.steps.full li>div{color:var(--fg);font-weight:600}
+.steps.full li.left>div{color:color-mix(in srgb,var(--fg) 70%,transparent)}
+.steps.full li.now>div{color:var(--fg)}
 .subs{font-size:12px;color:var(--mut);margin-top:3px}
-.jump{display:none;width:22px;height:22px;margin:-3px -5px -3px 0;padding:0}
-.jump svg{width:12px;height:12px}
-.c:hover .jump{display:inline-flex}.c:hover .tm{display:none}
+.cact{display:flex;justify-content:space-between;align-items:center;max-height:0;opacity:0;overflow:hidden;margin:0 -4px;transition:max-height .18s ease,opacity .15s ease,margin .18s ease}
+.c:hover .cact,.c.ask .cact,.c:focus-within .cact{max-height:30px;opacity:1;margin:6px -4px -2px}
+.cact .btn{height:22px;font-size:11.5px}
+.c.dragging{opacity:.4}
+.ws.drop{outline:2px dashed color-mix(in srgb,var(--wait) 60%,transparent);outline-offset:-2px}
 .empty{color:var(--mut);font-size:13px;padding:24px 8px;text-align:center;line-height:1.6}
 
 /* 상세 */
@@ -119,6 +129,11 @@ ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .todo li.done{color:var(--mut);text-decoration:line-through}.todo li.done b{background:var(--done);border-color:var(--done)}
 .todo li.done b:after{content:"";position:absolute;left:3.5px;top:.5px;width:4px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
 .todo em{font-style:normal;font-size:10px;color:var(--now);margin-left:5px}
+.foot{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;margin:14px 2px 0;font-size:11.5px;color:var(--mut)}
+.foot span{display:inline-flex;align-items:center;gap:5px}
+.lg{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.lg.done{background:var(--done)}.lg.now{background:var(--now)}.lg.side{background:var(--side)}.lg.left{border:1.5px solid var(--left)}
+.foot .upd{margin-left:auto}
 .toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--orca-popover,var(--card));color:var(--orca-popover-foreground,var(--fg));border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11.5px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 </style>
@@ -180,10 +195,16 @@ function stepLi(f, withDetail) {
 }
 
 function card(s) {
-  const steps = s.steps || [], [a, b] = windowOf(steps), sub = (s.subs || [])[0]
-  return el('div', { class: ['c', s.status, flash.get(key(s))].filter(Boolean).join(' '), onclick: () => openDetail(s) },
-    el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since)),
-      el('button', { class: 'btn ghost jump', title: 'Go to session', onclick: (e) => { e.stopPropagation(); goTo(s.handle) } }, arrow())),
+  const steps = s.steps || [], [a, b] = windowOf(steps), sub = (s.subs || [])[0], asking = S.ask === s.handle
+  const stop = (fn) => (e) => { e.stopPropagation(); fn() }
+  const act = el('div', { class: 'cact' },
+    asking
+      ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End this session'), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
+      : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End session'), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go to session', arrow())])
+  return el('div', { class: ['c', s.status, asking && 'ask', flash.get(key(s))].filter(Boolean).join(' '), draggable: 'true', onclick: () => openDetail(s),
+      ondragstart: (e) => { S.drag = s; e.dataTransfer.effectAllowed = 'move'; e.currentTarget.classList.add('dragging') },
+      ondragend: (e) => { S.drag = null; e.currentTarget.classList.remove('dragging'); document.querySelectorAll('.ws.drop').forEach((n) => n.classList.remove('drop')) } },
+    el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since))),
     el('div', { class: 'ti' }, s.title || '(untitled)'),
     s.stuck ? el('div', { class: 'warn' }, 'No progress for a while') : null,
     s.fail ? el('div', { class: 'warn' }, 'Summary failed') : null,
@@ -192,7 +213,8 @@ function card(s) {
           a > 0 ? el('li', { class: 'gap' }, el('i', {}, '⋮'), a + ' earlier step' + (a > 1 ? 's' : '')) : null,
           steps.slice(a, b).map((f) => stepLi(f, false)))
       : el('div', { class: 'subs' }, s.note || ''),
-    sub ? el('div', { class: 'subs' }, '↳ ' + sub.who + ' · ', el('b', {}, sub.state === 'busy' ? 'Working' : 'Done')) : null)
+    sub ? el('div', { class: 'subs' }, '↳ ' + sub.who + ' · ', el('b', {}, sub.state === 'busy' ? 'Working' : 'Done')) : null,
+    act)
 }
 
 // 보드와 같은 순서: 카드는 내 차례 먼저(Newest 면 최근에 내 차례가 된 것부터, Longest wait 면 오래 기다린 것부터), 칸은 맨 위 카드가 앞서는 칸부터
@@ -221,6 +243,13 @@ function header(all, sort, group) {
       opt(group === 'ai', 'AI topics', () => setConfig({ group_by: 'ai' }))) : null)
 }
 
+function footer(d) {
+  const t = d.at ? new Date(d.at * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) : ''
+  const lg = (c, t) => el('span', {}, el('i', { class: 'lg ' + c }), t)
+  return el('div', { class: 'foot' }, lg('done', 'Done'), lg('now', 'Now'), lg('left', 'Next'), lg('side', 'Intercept'),
+    t ? el('span', { class: 'upd', title: 'Spyhop ' + (d.version || '') }, 'Updated ' + t) : null)
+}
+
 function renderList() {
   const d = S.data, all = d.sessions || [], sort = d.sort || 'recent', group = d.group_by || 'location'
   let shown = all.filter((s) => S.filter === 'all' || s.status === S.filter).sort((x, y) => cmp(sortKey(x, sort), sortKey(y, sort)))
@@ -235,12 +264,17 @@ function renderList() {
   const body = groups.size
     ? [...groups].map(([g, list]) => {
         const shut = S.shut.has(g)
-        return el('div', { class: 'ws' + (shut ? ' shut' : '') },
+        const wid = group === 'ai' ? 'group:' + g : list[0].wid
+        return el('div', { class: 'ws' + (shut ? ' shut' : ''),
+            ondragover: (e) => { if (S.drag && key(S.drag) && !list.includes(S.drag)) { e.preventDefault(); e.currentTarget.classList.add('drop') } },
+            ondragleave: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drop') },
+            ondrop: (e) => { e.preventDefault(); e.currentTarget.classList.remove('drop'); const d = S.drag; S.drag = null; if (d) moveTo(d, wid) } },
           el('button', { class: 'wsh', onclick: () => { shut ? S.shut.delete(g) : S.shut.add(g); render() } }, g, el('span', { class: 'n' }, list.length), el('i', { class: 'chev car' + (shut ? ' right' : '') })),
           shut ? null : el('div', { class: 'cards' }, list.map(card)))
       })
     : el('p', { class: 'empty' }, all.length ? 'No sessions here.' : 'The sea is calm · no sessions running.')
-  return [header(all, sort, group), pending.length ? el('p', { class: 'sorting' }, pending.length + ' new · sorting') : null, body]
+  return [header(all, sort, group), pending.length ? el('p', { class: 'sorting' }, pending.length + ' new · sorting') : null,
+    groups.size ? el('div', { class: 'board' }, body) : body, footer(d)]
 }
 
 function ring(done, total) {
@@ -269,7 +303,7 @@ function renderDetail(s) {
       el('span', { class: 'mline' }, s.model || '', s.model && s.sid ? ' · ' : '',
         s.sid ? el('button', { class: 'btn ghost sid', title: 'Copy: ' + (s.resume || s.sid), onclick: () => req('spyhop.copy', { text: s.resume || s.sid }).then(() => toast('Copied: ' + (s.resume || s.sid))) }, 'ID ' + s.sid.slice(0, 8)) : null)),
     el('h4', {}, 'Steps'),
-    steps.length ? el('ul', { class: 'steps' }, steps.map((f) => stepLi(f, true))) : el('p', { class: 'sum' }, s.note || 'No steps yet'),
+    steps.length ? el('ul', { class: 'steps full' }, steps.map((f) => stepLi(f, true))) : el('p', { class: 'sum' }, s.note || 'No steps yet'),
     (s.reply || s.full || cleanAsk(s.ask)) ? [el('h4', {}, 'Last reply'),
       cleanAsk(s.ask) ? el('p', { class: 'ask' }, el('b', {}, 'You asked'), cleanAsk(s.ask)) : null,
       el('div', { class: 'box' }, s.reply || (s.full || '').slice(0, 200),
@@ -313,10 +347,15 @@ async function load() {
     if (seen) for (const [k, v] of now) { if (!seen.has(k)) flash.set(k, 'fresh'); else if (seen.get(k) !== v) flash.set(k, 'changed') }
     seen = now
   }
-  if (S.menu) return // 메뉴를 연 동안은 다시 그리지 않는다
+  if (S.menu || S.drag) return // 메뉴를 열었거나 카드를 끄는 동안은 다시 그리지 않는다
   render()
 }
 async function setConfig(c) { await req('spyhop.config', c).catch(() => null); await load() }
+async function moveTo(s, wid) {
+  const r = await req('spyhop.move', { h: s.handle, wid }).catch(() => null)
+  if (r) toast(r.result || 'Moved')
+  await load()
+}
 async function goTo(h) { const r = await req('spyhop.switch', { handle: h }).catch(() => null); if (r && !r.ok) toast('Could not open that session') }
 async function endSession(h) {
   S.ask = ''
@@ -330,7 +369,7 @@ async function toggle(log, t) {
   await req('spyhop.toggle', { log, label: t.label, done }).catch(() => null)
 }
 
-load().then(() => { const x = S.data.sessions.find((s) => (s.todo || []).length && s.sid && (s.subs||[]).length) || S.data.sessions.find((s) => (s.todo || []).length && s.sid); openDetail(x) })
+load()
 setInterval(() => { if (document.visibilityState === 'visible') load() }, 5000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
 document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
