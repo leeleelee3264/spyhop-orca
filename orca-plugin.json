@@ -1,0 +1,24 @@
+{
+  "manifestVersion": 2,
+  "id": "spyhop-orca",
+  "name": "Spyhop",
+  "version": "0.1.0",
+  "description": "Every AI session on one list in the Orca sidebar: steps, TODO and whose turn it is. Needs the Spyhop app.",
+  "engines": {
+    "orca": ">=1.4.246"
+  },
+  "execution": "trusted-worker",
+  "pluginApi": 1,
+  "main": "src/worker.ts",
+  "contributes": {
+    "panels": [
+      {
+        "id": "spyhop-orca",
+        "title": "Spyhop",
+        "icon": "agent",
+        "entry": "panel/index.html"
+      }
+    ]
+  },
+  "capabilities": []
+}
