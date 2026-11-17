@@ -122,7 +122,23 @@ ul.steps{list-style:none;margin:0;padding:0}
 .cact{display:flex;justify-content:space-between;align-items:center;max-height:0;opacity:0;overflow:hidden;margin:0 -4px;transition:max-height .18s ease,opacity .15s ease,margin .18s ease}
 .c:hover .cact,.c.ask .cact,.c:focus-within .cact{max-height:30px;opacity:1;margin:6px -4px -2px}
 .cact .btn{height:22px;font-size:11.5px}
-.c.dragging{opacity:.4}
+.c.dragging{opacity:.35}
+.c.floating{position:fixed;left:0;top:0;z-index:20;pointer-events:none;margin:0;box-shadow:0 18px 40px rgba(0,0,0,.35);border-color:var(--line)}
+body.dragging-on{user-select:none;cursor:grabbing}
+.ws.newcol{border:1.5px dashed color-mix(in srgb,var(--mut) 50%,transparent);background:transparent;min-height:56px}
+.ws.newcol .wsh{color:var(--mut);padding:10px 6px}
+.ov{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:center;padding:60px 12px}
+.dlg{width:100%;max-width:340px;background:var(--orca-popover,var(--card));color:var(--orca-popover-foreground,var(--fg));border:1px solid var(--line);border-radius:var(--orca-radius,10px);padding:12px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.dlg h3{margin:0 0 10px;font-size:13px}
+.nm{width:100%;height:30px;padding:0 9px;border-radius:var(--rmd);border:1px solid var(--orca-input,var(--line));background:color-mix(in srgb,var(--orca-input,var(--line)) 30%,transparent);color:var(--fg);font:inherit;font-size:13px;outline:none}
+.nm:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--orca-ring) 50%,transparent)}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:9px 0 2px;min-height:22px}
+.chip{height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;border:1px solid var(--line);background:var(--soft)}
+.chip:hover{background:var(--acc)}.chip.old{color:var(--mut);border-style:dashed}
+.pks{display:grid;gap:2px;max-height:260px;overflow:auto}
+.pk{display:block;text-align:left;padding:6px 8px;border-radius:var(--rmd)}.pk b{display:block;font-size:12.5px;font-weight:500}.pk small{color:var(--mut);font-size:11px}
+.pk:hover{background:color-mix(in srgb,var(--acc) 50%,transparent)}.pk.on{background:var(--acc);color:var(--accfg)}
+.dbtns{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
 .ws.drop{outline:2px dashed color-mix(in srgb,var(--wait) 60%,transparent);outline-offset:-2px}
 .empty{color:var(--mut);font-size:13px;padding:24px 8px;text-align:center;line-height:1.6}
 
@@ -229,9 +245,7 @@ function card(s) {
     asking
       ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End this session'), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
       : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End session'), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go to session', arrow())])
-  return el('div', { class: ['c', s.status, asking && 'ask', flash.get(key(s))].filter(Boolean).join(' '), draggable: 'true', onclick: () => openDetail(s),
-      ondragstart: (e) => { S.drag = s; e.dataTransfer.effectAllowed = 'move'; e.currentTarget.classList.add('dragging') },
-      ondragend: (e) => { S.drag = null; e.currentTarget.classList.remove('dragging'); document.querySelectorAll('.ws.drop').forEach((n) => n.classList.remove('drop')) } },
+  return el('div', { class: ['c', s.status, asking && 'ask', flash.get(key(s))].filter(Boolean).join(' '), 'data-k': key(s), onclick: () => { if (!justDragged) openDetail(s) } },
     el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since))),
     el('div', { class: 'ti' }, s.title || '(untitled)'),
     s.stuck ? el('div', { class: 'warn' }, 'No progress for a while') : null,
@@ -315,10 +329,7 @@ function renderList() {
     ? [...groups].map(([g, list]) => {
         const shut = S.shut.has(g)
         const wid = group === 'ai' ? 'group:' + g : list[0].wid
-        return el('div', { class: 'ws' + (shut ? ' shut' : ''),
-            ondragover: (e) => { if (S.drag && key(S.drag) && !list.includes(S.drag)) { e.preventDefault(); e.currentTarget.classList.add('drop') } },
-            ondragleave: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drop') },
-            ondrop: (e) => { e.preventDefault(); e.currentTarget.classList.remove('drop'); const d = S.drag; S.drag = null; if (d) moveTo(d, wid) } },
+        return el('div', { class: 'ws' + (shut ? ' shut' : ''), 'data-wid': wid },
           el('button', { class: 'wsh', onclick: () => { shut ? S.shut.delete(g) : S.shut.add(g); render() } }, g, el('span', { class: 'n' }, list.length), el('i', { class: 'chev car' + (shut ? ' right' : '') })),
           shut ? null : el('div', { class: 'cards' }, list.map(card)))
       })
@@ -397,7 +408,7 @@ async function load() {
     if (seen) for (const [k, v] of now) { if (!seen.has(k)) flash.set(k, 'fresh'); else if (seen.get(k) !== v) flash.set(k, 'changed') }
     seen = now
   }
-  if (S.menu || S.drag) return // 메뉴를 열었거나 카드를 끄는 동안은 다시 그리지 않는다
+  if (S.menu || drag || S.dialog) return // 메뉴·창을 열었거나 카드를 끄는 동안은 다시 그리지 않는다
   render()
 }
 async function loadCfg() { S.cfg = await req('spyhop.getConfig', {}).catch(() => null); if (S.menu) render() }
@@ -405,9 +416,109 @@ function applyPal() { if (S.pal === 'orca') delete document.documentElement.data
 async function setPal(id) { S.pal = id; applyPal(); render(); try { await orca.storage.set('palette', id) } catch {} }
 async function setConfig(c) { await req('spyhop.config', c).catch(() => null); await load() }
 async function moveTo(s, wid) {
+  const ai = wid.startsWith('group:')
+  if (!ai && s.status !== 'wait') { toast('This session is working. Move it after it stops.'); return }
   const r = await req('spyhop.move', { h: s.handle, wid }).catch(() => null)
-  if (r) toast(r.result || 'Moved')
+  if (r) toast(ai ? 'Moved in Spyhop only. The Orca pane stays where it is.' : (r.result || 'Moved'))
   await load()
+}
+
+// ---------- 카드 끌어 옮기기 (보드와 같은 동작) ----------
+// 누른 채 6px 넘게 움직이면 카드가 손을 따라온다. 다른 칸에 놓으면 옮기고, 끝의 점선 칸에 놓으면
+// AI 주제는 새 칸 이름을 짓고(추천 이름 포함), 워크스페이스는 세션이 없는 워크스페이스를 고른다
+let press = null, drag = null, justDragged = false
+const findSession = (k) => (S.data && S.data.sessions || []).find((x) => key(x) === k)
+function emptyWS() {
+  const have = new Set([...document.querySelectorAll('.board .ws[data-wid]')].map((n) => n.dataset.wid))
+  return (S.data.workspaces || []).filter((w) => !have.has(w.id) && !w.id.startsWith('group:'))
+}
+document.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 || S.view !== 'list') return
+  const c = e.target.closest && e.target.closest('.board .c')
+  if (!c || e.target.closest('button')) return
+  press = { k: c.dataset.k, x: e.clientX, y: e.clientY }
+})
+document.addEventListener('pointermove', (e) => {
+  if (press && !drag && Math.abs(e.clientX - press.x) + Math.abs(e.clientY - press.y) > 6) {
+    const c = document.querySelector('.board .c[data-k="' + CSS.escape(press.k) + '"]'), s = findSession(press.k), p0 = press
+    press = null
+    if (c && s) startDrag(c, s, p0)
+  }
+  if (!drag) return
+  e.preventDefault()
+  drag.float.style.transform = 'translate(' + (e.clientX - drag.dx) + 'px,' + (e.clientY - drag.dy) + 'px) rotate(2deg)'
+  const col = colAt(e.clientX, e.clientY)
+  document.querySelectorAll('.ws.drop').forEach((n) => { if (n !== col) n.classList.remove('drop') })
+  if (col && col !== drag.from) col.classList.add('drop')
+  if (e.clientY > innerHeight - 50) window.scrollBy(0, 16); else if (e.clientY < 60) window.scrollBy(0, -16)
+})
+document.addEventListener('pointerup', (e) => {
+  press = null
+  if (!drag) return
+  const d = drag; drag = null
+  setTimeout(() => { justDragged = false }, 60)
+  const col = colAt(e.clientX, e.clientY)
+  document.querySelectorAll('.ws.drop').forEach((n) => n.classList.remove('drop'))
+  d.float.remove(); d.el.classList.remove('dragging'); document.body.classList.remove('dragging-on')
+  const ghost = document.querySelector('.ws.newcol')
+  if (!col || col === d.from) { if (ghost) ghost.remove(); return }
+  if (col.classList.contains('newcol')) { askNew(d.s, col.dataset.wid === 'pick:'); return }
+  if (ghost) ghost.remove()
+  moveTo(d.s, col.dataset.wid)
+})
+function colAt(x, y) { const n = document.elementFromPoint(x, y); return n && n.closest ? n.closest('.board .ws') : null }
+function startDrag(c, s, p0) {
+  const r = c.getBoundingClientRect(), f = c.cloneNode(true)
+  f.classList.add('floating'); f.style.width = r.width + 'px'
+  f.style.transform = 'translate(' + r.left + 'px,' + r.top + 'px)'
+  document.body.appendChild(f)
+  drag = { s, el: c, from: c.closest('.ws'), float: f, dx: p0.x - r.left, dy: p0.y - r.top }
+  c.classList.add('dragging'); document.body.classList.add('dragging-on'); justDragged = true
+  // 끝에 점선 칸 하나: AI 주제면 새 칸, 워크스페이스면 세션 없는 워크스페이스 고르기(오르카 밖 세션·작업 중이면 없음)
+  const ai = (S.data.group_by || 'location') === 'ai', board = document.querySelector('.board')
+  if (!board) return
+  if (ai) board.append(el('div', { class: 'ws newcol', 'data-wid': 'group:' }, el('div', { class: 'wsh' }, '+ New column')))
+  else if (s.status === 'wait' && !s.handle.startsWith('proc_') && emptyWS().length)
+    board.append(el('div', { class: 'ws newcol', 'data-wid': 'pick:' }, el('div', { class: 'wsh' }, '+ Other workspace')))
+}
+
+// 새 칸 이름 짓기 / 워크스페이스 고르기 창
+function askNew(s, pick) {
+  S.dialog = true
+  const close = () => { S.dialog = false; ov.remove(); const g = document.querySelector('.ws.newcol'); if (g) g.remove() }
+  const ov = el('div', { class: 'ov', onclick: (e) => { if (e.target === ov) close() } })
+  const box = el('div', { class: 'dlg' })
+  ov.append(box); document.body.append(ov)
+  if (pick) {
+    const list = emptyWS(); let on = 0
+    const rows = list.map((w, i) => el('button', { class: 'pk' + (i ? '' : ' on'), onclick: () => { on = i; rows.forEach((r, j) => r.classList.toggle('on', j === i)) }, ondblclick: () => done() },
+      el('b', {}, w.name), w.path ? el('small', {}, w.path) : null))
+    const done = () => { const w = list[on]; close(); if (w) moveTo(s, w.id) }
+    box.append(el('h3', {}, 'Move to another workspace'), el('div', { class: 'pks' }, rows),
+      el('div', { class: 'dbtns' }, el('button', { class: 'btn ghost', onclick: close }, 'Cancel'), el('button', { class: 'btn pri', onclick: done }, 'Move')))
+    ov.tabIndex = -1; ov.focus()
+    ov.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') close(); else if (e.key === 'Enter') done()
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); on = Math.max(0, Math.min(rows.length - 1, on + (e.key === 'ArrowDown' ? 1 : -1))); rows.forEach((r, j) => r.classList.toggle('on', j === on)) }
+    })
+    return
+  }
+  const input = el('input', { class: 'nm', placeholder: 'Column name', spellcheck: 'false' })
+  const chips = el('div', { class: 'chips' }, el('span', { class: 'mnote' }, 'Suggesting names…'))
+  const done = () => {
+    const name = input.value.split(/ +/).join(' ').trim(); close()
+    if (!name) return
+    const same = (S.data.workspaces || []).find((w) => w.id.startsWith('group:') && w.name.replace(/ /g, '').toLowerCase() === name.replace(/ /g, '').toLowerCase())
+    moveTo(s, same ? same.id : 'group:' + name) // 같은 이름 칸이 있으면 그 칸으로
+  }
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); done() } else if (e.key === 'Escape') close() })
+  box.append(el('h3', {}, 'New column'), input, chips,
+    el('div', { class: 'dbtns' }, el('button', { class: 'btn ghost', onclick: close }, 'Cancel'), el('button', { class: 'btn pri', onclick: done }, 'Create')))
+  setTimeout(() => input.focus(), 30)
+  req('spyhop.suggest', { h: s.handle }).then((r) => {
+    chips.replaceChildren(...(r.names || []).map((n) => el('button', { class: 'chip', onclick: () => { input.value = n; input.focus() } }, n)),
+      ...(r.similar || []).map((n) => el('button', { class: 'chip old', title: 'Existing column', onclick: () => { input.value = n; input.focus() } }, n)))
+  }).catch(() => chips.replaceChildren())
 }
 async function goTo(h) { const r = await req('spyhop.switch', { handle: h }).catch(() => null); if (r && !r.ok) toast('Could not open that session') }
 async function endSession(h) {

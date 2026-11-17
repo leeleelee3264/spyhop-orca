@@ -58,6 +58,11 @@ export default function activate(orca: OrcaWorkerApi): void {
     return { result: await post('/move', JSON.stringify(input)) }
   })
 
+  // 새 주제 칸 이름 추천(보드의 /suggest 그대로): 이 세션에 맞는 새 이름과 비슷한 기존 칸
+  orca.panels.handle('spyhop.suggest', async (input: { h: string }) => {
+    return JSON.parse(await post('/suggest', input.h))
+  })
+
   orca.panels.handle('spyhop.switch', async (input: { handle: string }) => {
     const res = await fetch(`${BOARD}/switch?h=${encodeURIComponent(input.handle)}`)
     const text = await res.text()
