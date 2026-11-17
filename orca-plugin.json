@@ -2,8 +2,10 @@
   "manifestVersion": 2,
   "id": "spyhop-orca",
   "name": "Spyhop",
-  "version": "0.1.0",
+  "publisher": "leeleelee3264",
+  "version": "0.1.1",
   "description": "Every AI session on one list in the Orca sidebar: steps, TODO and whose turn it is. Needs the Spyhop app.",
+  "license": "MIT",
   "engines": {
     "orca": ">=1.4.246"
   },
