@@ -30,11 +30,18 @@ export default function activate(orca: OrcaWorkerApi): void {
     }
   })
 
+  // 요약 모델 목록: 이 맥에서 쓸 수 있는 것만 보드가 알려 준다
+  orca.panels.handle('spyhop.getConfig', async () => {
+    const res = await fetch(`${BOARD}/config`, { cache: 'no-store' })
+    return await res.json()
+  })
+
   // Sort and grouping are the board's own settings, so the app board changes with them.
-  orca.panels.handle('spyhop.config', async (input: { group_by?: string; sort?: string }) => {
+  orca.panels.handle('spyhop.config', async (input: { group_by?: string; sort?: string; summarizer?: string }) => {
     const req: Record<string, string> = {}
     if (input.group_by) req.group_by = input.group_by
     if (input.sort) req.sort = input.sort
+    if (input.summarizer) req.summarizer = input.summarizer
     return { ok: (await post('/config', JSON.stringify(req))) === 'saved' }
   })
 

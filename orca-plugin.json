@@ -20,5 +20,9 @@
       }
     ]
   },
-  "capabilities": []
+  "capabilities": [
+    {
+      "kind": "storage:own"
+    }
+  ]
 }

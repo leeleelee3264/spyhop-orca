@@ -21,6 +21,15 @@
 /* My turn(주황)과 Working(파랑)은 한눈에 갈리게 다른 계열로 둔다. 둘 다 오르카가 쓰는 색(질문 주황 · 위치 표시 파랑). 지금 단계 점만 오르카의 작업 노랑 */
 :root{--waittx:#c2410c;--busytx:#1d4ed8}
 html.dark{--wait:#f97316;--busy:#60a5fa;--done:#86efac;--side:#a78bfa;--waittx:#fb923c;--busytx:#60a5fa}
+/* Signal: 분홍과 하늘색, 채도가 가장 높아 멀리서도 갈린다 */
+html[data-pal=signal]{--wait:#d6125f;--busy:#0e7490;--done:#4d7c0f;--now:#b45309;--side:#7c3aed;--waittx:#be0f55;--busytx:#0e7490}
+html.dark[data-pal=signal]{--wait:#ff3b81;--busy:#22d3ee;--done:#a3e635;--now:#fbbf24;--side:#c084fc;--waittx:#ff5c95;--busytx:#22d3ee}
+/* Color-blind safe: 색약에도 갈리는 오카베-이토 색 */
+html[data-pal=cvd]{--wait:#d55e00;--busy:#0072b2;--done:#009e73;--now:#b8a000;--side:#cc79a7;--waittx:#b34d00;--busytx:#0072b2}
+html.dark[data-pal=cvd]{--wait:#ff8a3d;--busy:#56b4e9;--done:#2ec4a0;--now:#f0e442;--side:#e08cba;--waittx:#ff8a3d;--busytx:#56b4e9}
+/* Classic: Spyhop 보드 카드 색(빨강 · 파랑) */
+html[data-pal=classic]{--wait:#dc4c3e;--busy:#2f7de1;--done:#3fa877;--now:#c98a12;--side:#8b6fd1;--waittx:#c0392b;--busytx:#2f7de1}
+html.dark[data-pal=classic]{--wait:#ef6a5c;--busy:#4c9ffe;--done:#5cc98f;--now:#e0a640;--side:#a48bd1;--waittx:#ff7b6e;--busytx:#5aa9ff}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
@@ -49,6 +58,14 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .menu button{display:flex;justify-content:space-between;align-items:center;width:100%;height:28px;padding:0 8px;border-radius:calc(var(--orca-radius,10px) - 4px);font-size:12px;text-align:left}
 .menu button:hover{background:var(--acc);color:var(--accfg)}
 .menu button.on:after{content:"✓";color:var(--mut)}
+.menu h6{margin:6px 8px 2px;font-size:10.5px;font-weight:500;color:var(--mut)}
+.menu .msub{gap:6px}.menu .msub span{flex:1}.menu .msub em{font-style:normal;color:var(--mut);font-size:11.5px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu .mback{justify-content:flex-start;gap:6px;color:var(--mut)}.menu .mback .chev{transform:rotate(135deg)}
+.mnote{margin:6px 8px 4px;font-size:11px;color:var(--mut);line-height:1.4}
+.menu{max-height:min(420px,80vh);overflow:auto}
+.sw{display:flex;align-items:center;gap:4px}.sw i{width:10px;height:10px;border-radius:3px;display:inline-block}.sw i.b{margin-right:6px}
+.p-orca.w{background:#f97316}.p-orca.b{background:#60a5fa}.p-signal.w{background:#ff3b81}.p-signal.b{background:#22d3ee}
+.p-cvd.w{background:#ff8a3d}.p-cvd.b{background:#56b4e9}.p-classic.w{background:#ef6a5c}.p-classic.b{background:#4c9ffe}
 .menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .sorting{font-size:12px;color:var(--mut);margin:0 2px 8px}
 
@@ -75,7 +92,10 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .c.wait{--st:var(--wait)}
 @media (prefers-reduced-motion:reduce){.c{animation:none!important;transition:none}}
 .hd{display:flex;align-items:center;gap:6px}
-.st{font-size:12px;font-weight:600;color:var(--busytx)}.wait .st,.st.wait{color:var(--waittx)}
+.st{font-size:11.5px;font-weight:600;color:var(--busytx);background:color-mix(in srgb,var(--busy) 15%,transparent);border-radius:4px;padding:0 6px;line-height:18px}
+.wait .st,.st.wait{color:var(--waittx);background:color-mix(in srgb,var(--wait) 16%,transparent)}
+.c.wait{background:color-mix(in srgb,var(--wait) 6%,var(--card))}
+.c:before{width:4px}
 .md{font-size:11px;color:var(--mut);background:var(--soft);border-radius:4px;padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tm{margin-left:auto;font-size:11.5px;color:var(--mut);white-space:nowrap}
 .ti{font-weight:600;font-size:14px;margin:4px 0 6px;line-height:1.35;word-break:break-word}
@@ -148,7 +168,7 @@ ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 <div class="toast" id="toast"></div>
 <script>
 const app = document.getElementById('app')
-const S = { data: null, error: '', view: 'list', sel: '', filter: 'all', shut: new Set(), ask: '', listY: 0, full: '', menu: false }
+const S = { data: null, error: '', view: 'list', sel: '', filter: 'all', shut: new Set(), ask: '', listY: 0, full: '', menu: false, pal: 'orca', cfg: null }
 const LABEL = { wait: 'My turn', busy: 'Working' }
 let seen = null // 카드별 지난 내용. 바뀐 카드만 반짝이게 하려고 둔다
 let flash = new Map()
@@ -233,19 +253,41 @@ function header(all, sort, group) {
   const n = { wait: 0, busy: 0 }
   all.forEach((s) => { n[s.status] = (n[s.status] || 0) + 1 })
   const tab = (v, t, c) => el('button', { class: 'tab ' + v + (S.filter === v ? ' on' : ''), onclick: () => { S.filter = v; render() } }, t, el('b', {}, c))
-  const opt = (on, t, fn) => el('button', { class: on ? 'on' : null, onclick: () => { S.menu = false; fn() } }, t)
+  const opt = (on, t, fn) => el('button', { class: on ? 'on' : null, onclick: () => { S.menu = false; render(); fn() } }, t)
   return el('div', { class: 'head' },
     el('div', { class: 'tabs' }, tab('all', 'All', all.length), tab('wait', 'My turn', n.wait), tab('busy', 'Working', n.busy)),
-    el('button', { class: 'vbtn' + (S.menu ? ' on' : ''), title: 'Sort and group', onclick: (e) => { e.stopPropagation(); S.menu = !S.menu; render() } },
+    el('button', { class: 'vbtn' + (S.menu ? ' on' : ''), title: 'Sort and group', onclick: (e) => { e.stopPropagation(); S.menu = S.menu ? false : 'main'; render(); if (S.menu && !S.cfg) loadCfg() } },
       svgIcon('M3 6h18M6 12h12M10 18h4')),
-    S.menu ? el('div', { class: 'menu', onclick: (e) => e.stopPropagation() },
-      el('h5', {}, 'Sort'),
-      opt(sort === 'recent', 'Newest', () => setConfig({ sort: 'recent' })),
-      opt(sort === 'wait', 'Longest wait', () => setConfig({ sort: 'wait' })),
-      el('hr'),
-      el('h5', {}, 'Group by'),
-      opt(group !== 'ai', 'Location', () => setConfig({ group_by: 'location' })),
-      opt(group === 'ai', 'AI topics', () => setConfig({ group_by: 'ai' }))) : null)
+    S.menu ? menu(sort, group, opt) : null)
+}
+
+const PALETTES = [['orca', 'Orca'], ['signal', 'Signal'], ['cvd', 'Color-blind safe'], ['classic', 'Spyhop classic']]
+function menu(sort, group, opt) {
+  const box = (...kids) => el('div', { class: 'menu', onclick: (e) => e.stopPropagation() }, ...kids)
+  const back = () => el('button', { class: 'mback', onclick: () => { S.menu = 'main'; render() } }, el('i', { class: 'chev' }), 'Back')
+  const sub = (t, v, page) => el('button', { class: 'msub', onclick: () => { S.menu = page; render(); if (page === 'sum') loadCfg() } }, el('span', {}, t), el('em', {}, v), el('i', { class: 'chev right' }))
+  if (S.menu === 'colors') return box(back(), el('h5', {}, 'Status colors'),
+    PALETTES.map(([id, t]) => el('button', { class: S.pal === id ? 'on' : null, onclick: () => setPal(id) },
+      el('span', { class: 'sw' }, el('i', { class: 'p-' + id + ' w' }), el('i', { class: 'p-' + id + ' b' }), t))))
+  if (S.menu === 'sum') {
+    const c = S.cfg
+    return box(back(), el('h5', {}, 'Summarizer'),
+      !c ? el('p', { class: 'mnote' }, 'Loading…') :
+      c.options.map((p) => [el('h6', {}, p.label), p.models.map((m) => opt(c.summarizer === m.id, m.name, () => setConfig({ summarizer: m.id }).then(loadCfg)))]),
+      el('p', { class: 'mnote' }, 'Changing it re-sorts AI topics. Also changes the Spyhop app.'))
+  }
+  const cur = S.cfg && S.cfg.options.flatMap((p) => p.models).find((m) => m.id === S.cfg.summarizer)
+  return box(
+    el('h5', {}, 'Sort'),
+    opt(sort === 'recent', 'Newest', () => setConfig({ sort: 'recent' })),
+    opt(sort === 'wait', 'Longest wait', () => setConfig({ sort: 'wait' })),
+    el('hr'),
+    el('h5', {}, 'Group by'),
+    opt(group !== 'ai', 'Location', () => setConfig({ group_by: 'location' })),
+    opt(group === 'ai', 'AI topics', () => setConfig({ group_by: 'ai' })),
+    el('hr'),
+    sub('Status colors', (PALETTES.find((p) => p[0] === S.pal) || PALETTES[0])[1], 'colors'),
+    sub('Summarizer', cur ? cur.name : '', 'sum'))
 }
 
 function footer(d) {
@@ -355,6 +397,9 @@ async function load() {
   if (S.menu || S.drag) return // 메뉴를 열었거나 카드를 끄는 동안은 다시 그리지 않는다
   render()
 }
+async function loadCfg() { S.cfg = await req('spyhop.getConfig', {}).catch(() => null); if (S.menu) render() }
+function applyPal() { if (S.pal === 'orca') delete document.documentElement.dataset.pal; else document.documentElement.dataset.pal = S.pal }
+async function setPal(id) { S.pal = id; applyPal(); render(); try { await orca.storage.set('palette', id) } catch {} }
 async function setConfig(c) { await req('spyhop.config', c).catch(() => null); await load() }
 async function moveTo(s, wid) {
   const r = await req('spyhop.move', { h: s.handle, wid }).catch(() => null)
@@ -374,7 +419,7 @@ async function toggle(log, t) {
   await req('spyhop.toggle', { log, label: t.label, done }).catch(() => null)
 }
 
-load()
+;(async () => { try { S.pal = (await orca.storage.get('palette')) || 'orca' } catch {} applyPal(); load() })()
 setInterval(() => { if (document.visibilityState === 'visible') load() }, 5000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
 document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
