@@ -143,7 +143,11 @@ body.dragging-on{user-select:none;cursor:grabbing}
 .empty{color:var(--mut);font-size:13px;padding:24px 8px;text-align:center;line-height:1.6}
 
 /* 상세 */
-.dbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:9px 0 8px;background:var(--bg);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin-bottom:10px}
+.dfoot{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;gap:8px;margin:18px -10px -24px;padding:8px 10px 10px;background:var(--bg);border-top:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.dfoot .backb{flex:1;height:28px;font-size:12.5px}.dfoot .backb .chev{transform:rotate(135deg);margin-right:2px}
+.dfoot .hint{font-size:11px;color:var(--mut);white-space:nowrap}
+@media (max-width:280px){.dfoot .hint{display:none}}
+.dbar{display:flex;align-items:center;gap:6px;padding:10px 0 8px;background:var(--bg);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin-bottom:10px}
 .back .chev{transform:rotate(135deg);margin:0 1px 0 3px}
 .drow{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
 .drow .wsn{font-weight:600;color:color-mix(in srgb,var(--fg) 80%,transparent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -352,7 +356,6 @@ function renderDetail(s) {
   const asking = S.ask === s.handle, where = s.where || 'Orca'
   return [
     el('div', { class: 'dbar' },
-      el('button', { class: 'btn ghost back', onclick: closeDetail }, el('i', { class: 'chev' }), 'Board'),
       el('div', { class: 'drow' }, el('span', { class: 'st ' + s.status }, LABEL[s.status] || s.status), el('span', { class: 'wsn' }, s.ws),
         (s.ws || '').endsWith(where) ? null : el('span', { class: 'wh' }, '· ' + where))),
     el('div', { class: 'hero' }, ring(s.done || 0, s.total || steps.length), el('div', {}, el('h2', {}, s.title || '(untitled)'), s.summary ? el('p', { class: 'sum' }, s.summary) : null)),
@@ -374,7 +377,10 @@ function renderDetail(s) {
       el('div', { class: 'b' }, el('button', { class: 'btn out', onclick: () => goTo(h.handle) }, 'Go', arrow()),
         h.state !== 'busy' ? el('button', { class: 'btn ghost', onclick: () => endSession(h.handle) }, 'Close') : null)))] : null,
     todo.length ? [el('h4', {}, 'TODO'), el('ul', { class: 'todo' }, todo.map((t) =>
-      el('li', { class: t.state === 'done' ? 'done' : null, onclick: () => toggle(log, t) }, el('b'), el('span', {}, t.label, t.state === 'open' ? el('em', {}, 'Paused') : null))))] : null]
+      el('li', { class: t.state === 'done' ? 'done' : null, onclick: () => toggle(log, t) }, el('b'), el('span', {}, t.label, t.state === 'open' ? el('em', {}, 'Paused') : null))))] : null,
+    el('div', { class: 'dfoot' },
+      el('button', { class: 'btn out backb', onclick: closeDetail }, el('i', { class: 'chev' }), 'Back to board'),
+      el('span', { class: 'hint' }, 'Esc · mouse back · swipe'))]
 }
 
 function render() {
@@ -537,6 +543,18 @@ async function toggle(log, t) {
 setInterval(() => { if (document.visibilityState === 'visible') load() }, 5000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
 document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
+// 마우스 옆 버튼(뒤로 가기)으로 보드로 돌아간다
+const mouseBack = (e) => { if (e.button === 3 && S.view === 'detail') { e.preventDefault(); closeDetail() } }
+document.addEventListener('mouseup', mouseBack)
+document.addEventListener('auxclick', (e) => { if (e.button === 3) e.preventDefault() })
+// 트랙패드 두 손가락으로 오른쪽으로 쓸면 돌아간다(가로로 크게 움직일 때만)
+let swipe = 0, swipeT = 0
+document.addEventListener('wheel', (e) => {
+  if (S.view !== 'detail' || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return
+  if (Date.now() - swipeT > 300) swipe = 0
+  swipeT = Date.now(); swipe += e.deltaX
+  if (swipe < -140) { swipe = 0; closeDetail() }
+}, { passive: true })
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return
   if (S.menu) { S.menu = false; render() } else if (S.view === 'detail') closeDetail()
