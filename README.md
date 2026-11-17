@@ -1,6 +1,6 @@
 # Spyhop for Orca
 
-Every AI coding session on one board, right in the [Orca](https://github.com/stablyai/orca) sidebar.
+Every AI coding session on one board, right in the Orca sidebar.
 This plugin is the Orca view of [Spyhop](https://github.com/leeleelee3264/spyhop): it shows whose turn it is,
 where each session is in its steps, its TODO and its last reply, without leaving Orca.
 
