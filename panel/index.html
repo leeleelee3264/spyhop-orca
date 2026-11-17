@@ -143,14 +143,13 @@ body.dragging-on{user-select:none;cursor:grabbing}
 .empty{color:var(--mut);font-size:13px;padding:24px 8px;text-align:center;line-height:1.6}
 
 /* 상세 */
-/* 보드로 돌아가기: 아래 가운데 떠 있는 작은 알약(바닥 띠 없이) */
-.dpad{height:56px}
-.backf{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:6;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 14px 0 11px;border-radius:999px;
-  font-size:12.5px;font-weight:500;color:var(--orca-popover-foreground,var(--fg));background:color-mix(in srgb,var(--orca-popover,var(--card)) 82%,transparent);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.28);transition:background-color .15s,transform .15s}
-.backf:hover{background:var(--acc);color:var(--accfg)}
-.backf:active{transform:translateX(-50%) scale(.97)}
-.backf .chev{transform:rotate(135deg);border-color:currentColor;margin-right:1px}
+/* 보드로 돌아가기: 바닥을 배경색으로 흐리게 덮고 왼쪽에 작은 글자 버튼 */
+.dpad{height:52px}
+.dfade{position:fixed;left:0;right:0;bottom:0;z-index:6;height:56px;display:flex;align-items:flex-end;padding:0 10px 10px;pointer-events:none;
+  background:linear-gradient(to bottom,color-mix(in srgb,var(--bg) 0%,transparent),var(--bg) 58%)}
+.backf{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 9px;border-radius:var(--rmd);font-size:12.5px;font-weight:500;color:var(--mut);transition:background-color .15s,color .15s}
+.backf:hover{background:color-mix(in srgb,var(--acc) 70%,transparent);color:var(--accfg)}
+.backf .chev{transform:rotate(135deg);border-color:currentColor}
 .dbar{display:flex;align-items:center;gap:6px;padding:10px 0 8px;background:var(--bg);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin-bottom:10px}
 .back .chev{transform:rotate(135deg);margin:0 1px 0 3px}
 .drow{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}
@@ -383,7 +382,7 @@ function renderDetail(s) {
     todo.length ? [el('h4', {}, 'TODO'), el('ul', { class: 'todo' }, todo.map((t) =>
       el('li', { class: t.state === 'done' ? 'done' : null, onclick: () => toggle(log, t) }, el('b'), el('span', {}, t.label, t.state === 'open' ? el('em', {}, 'Paused') : null))))] : null,
     el('div', { class: 'dpad' }),
-    el('button', { class: 'backf', title: 'Back to board (Esc)', onclick: closeDetail }, el('i', { class: 'chev' }), 'Board')]
+    el('div', { class: 'dfade' }, el('button', { class: 'backf', title: 'Back to board (Esc)', onclick: closeDetail }, el('i', { class: 'chev' }), 'Board'))]
 }
 
 function render() {
