@@ -73,7 +73,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .sorting{font-size:12px;color:var(--mut);margin:0 2px 8px}
 
 /* 칸(워크스페이스 또는 주제) */
-.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:9px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;align-items:start}
 .board>.ws{margin-bottom:0}
 .ws{background:var(--grp);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);border-radius:var(--orca-radius,10px);padding:7px;margin-bottom:9px}
 .wsh{display:flex;align-items:center;gap:6px;width:100%;padding:1px 4px 7px;font-size:13px;font-weight:600;color:color-mix(in srgb,var(--fg) 82%,transparent)}
@@ -122,6 +122,8 @@ ul.steps{list-style:none;margin:0;padding:0}
 .cact{display:flex;justify-content:space-between;align-items:center;max-height:0;opacity:0;overflow:hidden;margin:0 -4px;transition:max-height .18s ease,opacity .15s ease,margin .18s ease}
 .c:hover .cact,.c.ask .cact,.c:focus-within .cact{max-height:30px;opacity:1;margin:6px -4px -2px}
 .cact .btn{height:22px;font-size:11.5px}
+.c{container-type:inline-size}
+@container (max-width:200px){.cact .lw{display:none}}
 .c.dragging{opacity:.35}
 .c.floating{position:fixed;left:0;top:0;z-index:20;pointer-events:none;margin:0;box-shadow:0 18px 40px rgba(0,0,0,.35);border-color:var(--line)}
 body.dragging-on{user-select:none;cursor:grabbing}
@@ -250,8 +252,8 @@ function card(s) {
   const stop = (fn) => (e) => { e.stopPropagation(); fn() }
   const act = el('div', { class: 'cact' },
     asking
-      ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End this session'), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
-      : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End session'), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go to session', arrow())])
+      ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End', el('span', { class: 'lw' }, 'this session')), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
+      : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End', el('span', { class: 'lw' }, 'session')), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go', el('span', { class: 'lw' }, 'to session'), arrow())])
   return el('div', { class: ['c', s.status, asking && 'ask', flash.get(key(s))].filter(Boolean).join(' '), 'data-k': key(s), onclick: () => { if (!justDragged) openDetail(s) } },
     el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since))),
     el('div', { class: 'ti' }, s.title || '(untitled)'),
