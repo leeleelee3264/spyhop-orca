@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <style>
 /* 상태 색은 오르카 앱이 쓰는 값 그대로(main.css 의 --agent-question · --agent-working · --status-success · --ai-action-accent). 테마 밝기를 따라 바뀐다 */
-:root{--wait:#ea580c;--busy:#eab308;--done:#147638;--now:#eab308;--side:#8b5cf6;
+:root{--wait:#ea580c;--busy:#2563eb;--done:#147638;--now:#eab308;--side:#8b5cf6;
   --bg:var(--orca-background);--fg:var(--orca-foreground);--card:var(--orca-card);--line:var(--orca-border);--mut:var(--orca-muted-foreground);
   --left:color-mix(in srgb,var(--mut) 70%,transparent);--soft:color-mix(in srgb,var(--fg) 5%,transparent);
   --grp:color-mix(in srgb,var(--fg) 3%,var(--bg));--acc:var(--orca-accent);--accfg:var(--orca-accent-foreground);
@@ -18,9 +18,9 @@
 .btn.dchip:hover{background:color-mix(in srgb,var(--des) 15%,transparent)}
 .btn.dghost{color:var(--des)}.btn.dghost:hover{background:color-mix(in srgb,var(--des) 10%,transparent)}
 .btn.out{border:1px solid var(--orca-input,var(--line));background:color-mix(in srgb,var(--orca-input,var(--line)) 30%,transparent);color:var(--fg)}.btn.out:hover{background:color-mix(in srgb,var(--orca-input,var(--line)) 50%,transparent)}
-/* 글자로 쓸 때는 밝은 테마에서 한 단계 진하게(오르카의 --agent-question-text · --status-warning-text 와 같은 방식) */
-:root{--waittx:#c2410c;--busytx:color-mix(in srgb,#ca8a04 70%,var(--orca-foreground))}
-html.dark{--wait:#f97316;--done:#86efac;--side:#a78bfa;--waittx:#f97316;--busytx:#eab308}
+/* My turn(주황)과 Working(파랑)은 한눈에 갈리게 다른 계열로 둔다. 둘 다 오르카가 쓰는 색(질문 주황 · 위치 표시 파랑). 지금 단계 점만 오르카의 작업 노랑 */
+:root{--waittx:#c2410c;--busytx:#1d4ed8}
+html.dark{--wait:#f97316;--busy:#60a5fa;--done:#86efac;--side:#a78bfa;--waittx:#fb923c;--busytx:#60a5fa}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
