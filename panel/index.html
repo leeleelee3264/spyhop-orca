@@ -21,15 +21,19 @@
 /* My turn(주황)과 Working(파랑)은 한눈에 갈리게 다른 계열로 둔다. 둘 다 오르카가 쓰는 색(질문 주황 · 위치 표시 파랑). 지금 단계 점만 오르카의 작업 노랑 */
 :root{--waittx:#c2410c;--busytx:#1d4ed8}
 html.dark{--wait:#f97316;--busy:#60a5fa;--done:#86efac;--side:#a78bfa;--waittx:#fb923c;--busytx:#60a5fa}
-/* Signal: 분홍과 하늘색, 채도가 가장 높아 멀리서도 갈린다 */
-html[data-pal=signal]{--wait:#d6125f;--busy:#0e7490;--done:#4d7c0f;--now:#b45309;--side:#7c3aed;--waittx:#be0f55;--busytx:#0e7490}
-html.dark[data-pal=signal]{--wait:#ff3b81;--busy:#22d3ee;--done:#a3e635;--now:#fbbf24;--side:#c084fc;--waittx:#ff5c95;--busytx:#22d3ee}
-/* Color-blind safe: 색약에도 갈리는 오카베-이토 색 */
-html[data-pal=cvd]{--wait:#d55e00;--busy:#0072b2;--done:#009e73;--now:#b8a000;--side:#cc79a7;--waittx:#b34d00;--busytx:#0072b2}
-html.dark[data-pal=cvd]{--wait:#ff8a3d;--busy:#56b4e9;--done:#2ec4a0;--now:#f0e442;--side:#e08cba;--waittx:#ff8a3d;--busytx:#56b4e9}
-/* Classic: Spyhop 보드 카드 색(빨강 · 파랑) */
-html[data-pal=classic]{--wait:#dc4c3e;--busy:#2f7de1;--done:#3fa877;--now:#c98a12;--side:#8b6fd1;--waittx:#c0392b;--busytx:#2f7de1}
-html.dark[data-pal=classic]{--wait:#ef6a5c;--busy:#4c9ffe;--done:#5cc98f;--now:#e0a640;--side:#a48bd1;--waittx:#ff7b6e;--busytx:#5aa9ff}
+/* 색 묶음끼리도, 한 묶음 안의 My turn · Working 끼리도 서로 다른 계열로 둔다 */
+/* Neon: 분홍 · 연두 */
+html[data-pal=neon]{--wait:#db2777;--busy:#4d7c0f;--done:#0891b2;--now:#ca8a04;--side:#7c3aed;--waittx:#be185d;--busytx:#3f6212}
+html.dark[data-pal=neon]{--wait:#ff2d95;--busy:#a3e635;--done:#22d3ee;--now:#facc15;--side:#c084fc;--waittx:#ff4fa7;--busytx:#a3e635}
+/* Grape: 보라 · 청록 */
+html[data-pal=grape]{--wait:#9333ea;--busy:#0f766e;--done:#16a34a;--now:#d97706;--side:#db2777;--waittx:#7e22ce;--busytx:#0f766e}
+html.dark[data-pal=grape]{--wait:#c084fc;--busy:#2dd4bf;--done:#4ade80;--now:#fbbf24;--side:#f472b6;--waittx:#d8b4fe;--busytx:#2dd4bf}
+/* Alert: My turn 만 빨강, Working 은 회색. 내 차례만 튄다 */
+html[data-pal=alert]{--wait:#dc2626;--busy:#737373;--done:#525252;--now:#a3a3a3;--side:#737373;--waittx:#b91c1c;--busytx:#525252}
+html.dark[data-pal=alert]{--wait:#f43f5e;--busy:#8a8a8a;--done:#a3a3a3;--now:#d4d4d4;--side:#8a8a8a;--waittx:#fb7185;--busytx:#a3a3a3}
+/* Color-blind safe: 노랑 · 파랑(색약에도 가장 잘 갈리는 짝) */
+html[data-pal=cvd]{--wait:#b8960b;--busy:#0072b2;--done:#009e73;--now:#d55e00;--side:#cc79a7;--waittx:#8a6d00;--busytx:#0072b2}
+html.dark[data-pal=cvd]{--wait:#f0e442;--busy:#56b4e9;--done:#2ec4a0;--now:#e69f00;--side:#e08cba;--waittx:#f0e442;--busytx:#56b4e9}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%}
 body{font:13px/1.5 'Geist',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--fg);background:var(--bg)}
@@ -64,8 +68,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .mnote{margin:6px 8px 4px;font-size:11px;color:var(--mut);line-height:1.4}
 .menu{max-height:min(420px,80vh);overflow:auto}
 .sw{display:flex;align-items:center;gap:4px}.sw i{width:10px;height:10px;border-radius:3px;display:inline-block}.sw i.b{margin-right:6px}
-.p-orca.w{background:#f97316}.p-orca.b{background:#60a5fa}.p-signal.w{background:#ff3b81}.p-signal.b{background:#22d3ee}
-.p-cvd.w{background:#ff8a3d}.p-cvd.b{background:#56b4e9}.p-classic.w{background:#ef6a5c}.p-classic.b{background:#4c9ffe}
+.p-orca.w{background:#f97316}.p-orca.b{background:#60a5fa}.p-neon.w{background:#ff2d95}.p-neon.b{background:#a3e635}.p-grape.w{background:#c084fc}.p-grape.b{background:#2dd4bf}.p-alert.w{background:#f43f5e}.p-alert.b{background:#8a8a8a}.p-cvd.w{background:#f0e442}.p-cvd.b{background:#56b4e9}
 .menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .sorting{font-size:12px;color:var(--mut);margin:0 2px 8px}
 
@@ -181,7 +184,7 @@ function el(tag, attrs, ...kids) {
     else if (k.startsWith('on')) n.addEventListener(k.slice(2), v)
     else n.setAttribute(k, v)
   }
-  for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : String(k))
+  for (const k of kids.flat(Infinity)) if (k != null && k !== false) n.append(k.nodeType ? k : String(k))
   return n
 }
 function svgIcon(d) {
@@ -261,7 +264,7 @@ function header(all, sort, group) {
     S.menu ? menu(sort, group, opt) : null)
 }
 
-const PALETTES = [['orca', 'Orca'], ['signal', 'Signal'], ['cvd', 'Color-blind safe'], ['classic', 'Spyhop classic']]
+const PALETTES = [['orca', 'Orca'], ['neon', 'Neon'], ['grape', 'Grape'], ['alert', 'Alert'], ['cvd', 'Color-blind safe']]
 function menu(sort, group, opt) {
   const box = (...kids) => el('div', { class: 'menu', onclick: (e) => e.stopPropagation() }, ...kids)
   const back = () => el('button', { class: 'mback', onclick: () => { S.menu = 'main'; render() } }, el('i', { class: 'chev' }), 'Back')
@@ -419,7 +422,7 @@ async function toggle(log, t) {
   await req('spyhop.toggle', { log, label: t.label, done }).catch(() => null)
 }
 
-;(async () => { try { S.pal = (await orca.storage.get('palette')) || 'orca' } catch {} applyPal(); load() })()
+;(async () => { try { S.pal = (await orca.storage.get('palette')) || 'orca'; if (!PALETTES.some((p) => p[0] === S.pal)) S.pal = 'orca' } catch {} applyPal(); load() })()
 setInterval(() => { if (document.visibilityState === 'visible') load() }, 5000)
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load() })
 document.addEventListener('click', () => { if (S.menu) { S.menu = false; render() } })
