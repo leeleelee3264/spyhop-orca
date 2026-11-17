@@ -136,6 +136,9 @@ ul.todo{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .lg{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
 .lg.done{background:var(--done)}.lg.now{background:var(--now)}.lg.side{background:var(--side)}.lg.left{border:1.5px solid var(--left)}
 .foot .upd{margin-left:auto}
+/* 좁은 폭: 머리 줄이 안 겹치게, 상태 글자가 꺾이지 않게 */
+.st{white-space:nowrap}.md{min-width:0;flex:0 1 auto}.hd{min-width:0}
+@media (max-width:300px){.tab{padding:0 5px;gap:3px;font-size:12px}.tab b{padding:0 4px;min-width:16px}.head{gap:2px}}
 .toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--orca-popover,var(--card));color:var(--orca-popover-foreground,var(--fg));border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:11.5px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 </style>
