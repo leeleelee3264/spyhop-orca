@@ -2,10 +2,16 @@
   "manifestVersion": 2,
   "id": "spyhop-orca",
   "name": "Spyhop",
-  "publisher": "leeleelee3264",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Every AI session on one list in the Orca sidebar: steps, TODO and whose turn it is. Needs the Spyhop app.",
+  "author": {
+    "name": "leeleelee3264",
+    "url": "https://github.com/leeleelee3264"
+  },
+  "repository": "https://github.com/leeleelee3264/spyhop-orca",
   "license": "MIT",
+  "homepage": "https://leeleelee3264.github.io/spyhop/",
+  "icon": "assets/icon.png",
   "engines": {
     "orca": ">=1.4.246"
   },
@@ -25,6 +31,27 @@
   "capabilities": [
     {
       "kind": "storage:own"
+    }
+  ],
+  "cover": {
+    "path": "assets/cover.png",
+    "alt": "Spyhop board in the Orca sidebar, with sessions grouped by workspace"
+  },
+  "screenshots": [
+    {
+      "path": "assets/shot-board.png",
+      "alt": "A wide Spyhop panel with three workspace columns of session cards",
+      "caption": "Whose turn it is, at a glance"
+    },
+    {
+      "path": "assets/shot-detail.png",
+      "alt": "Session detail with steps, last reply and TODO",
+      "caption": "Steps, TODO and the last reply"
+    },
+    {
+      "path": "assets/shot-light.png",
+      "alt": "The Spyhop panel in a light Orca theme",
+      "caption": "Follows your Orca theme"
     }
   ]
 }
