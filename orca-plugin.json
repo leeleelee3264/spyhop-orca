@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "spyhop-orca",
   "name": "Spyhop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Every AI session on one list in the Orca sidebar: steps, TODO and whose turn it is. Needs the Spyhop app.",
   "author": {
     "name": "leeleelee3264",

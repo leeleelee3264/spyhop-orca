@@ -124,8 +124,22 @@ ul.steps{list-style:none;margin:0;padding:0}
 .cact .btn{height:22px;font-size:11.5px}
 .c{container-type:inline-size}
 @container (max-width:200px){.cact .lw{display:none}}
+.c.op{pointer-events:none;overflow:hidden;border-color:var(--line)}
+.c.op .cact{display:none}
+.c.op::before{content:"";position:absolute;inset:0;z-index:1;background:color-mix(in srgb,var(--card) 62%,transparent)}
+.c.op::after{content:"";position:absolute;left:0;bottom:0;z-index:2;height:3px;width:35%;background:var(--busy);animation:opbar 1s ease-in-out infinite}
+.c.op.end::after{background:var(--wait)}
+.c.op.fin::after{width:100%;background:var(--done);animation:opfill .35s ease-out}
+@keyframes opbar{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+@keyframes opfill{from{transform:scaleX(.35);transform-origin:left}to{transform:none}}
+.opl{position:absolute;left:50%;top:50%;z-index:3;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;background:var(--orca-popover,var(--card));border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--fg);white-space:nowrap;box-shadow:0 6px 18px rgba(0,0,0,.28);animation:oplin .2s ease-out}
+@keyframes oplin{from{opacity:0;transform:translate(-50%,-30%) scale(.92)}}
+.spin{width:12px;height:12px;border-radius:50%;border:2px solid color-mix(in srgb,currentColor 22%,transparent);border-top-color:currentColor;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.okm{width:10px;height:5px;margin:-3px 1px 0;border:solid var(--done);border-width:0 0 2px 2px;transform:rotate(-45deg)}
+.c.landing{visibility:hidden}
 .c.dragging{opacity:.35}
-.c.floating{position:fixed;left:0;top:0;z-index:20;pointer-events:none;margin:0;box-shadow:0 18px 40px rgba(0,0,0,.35);border-color:var(--line)}
+.c.floating{position:fixed;left:0;top:0;z-index:20;pointer-events:none;margin:0;box-shadow:0 18px 40px rgba(0,0,0,.5);border-color:var(--line);scale:1.03;rotate:-1.5deg}
 body.dragging-on{user-select:none;cursor:grabbing}
 .ws.newcol{border:1.5px dashed color-mix(in srgb,var(--mut) 50%,transparent);background:transparent;min-height:56px}
 .ws.newcol .wsh{color:var(--mut);padding:10px 6px}
@@ -248,14 +262,15 @@ function stepLi(f, withDetail) {
 }
 
 function card(s) {
-  const steps = s.steps || [], [a, b] = windowOf(steps), sub = (s.subs || [])[0], asking = S.ask === s.handle
+  const steps = s.steps || [], [a, b] = windowOf(steps), sub = (s.subs || [])[0], asking = S.ask === s.handle, op = ops.get(key(s))
   const stop = (fn) => (e) => { e.stopPropagation(); fn() }
   const act = el('div', { class: 'cact' },
     asking
-      ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End', el('span', { class: 'lw' }, 'this session')), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
-      : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End', el('span', { class: 'lw' }, 'session')), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go', el('span', { class: 'lw' }, 'to session'), arrow())])
-  return el('div', { class: ['c', s.status, asking && 'ask', flash.get(key(s))].filter(Boolean).join(' '), 'data-k': key(s), onclick: () => { if (!justDragged) openDetail(s) } },
+      ? [el('button', { class: 'btn dchip', onclick: stop(() => endSession(s.handle)) }, 'End', el('span', { class: 'lw' }, 'this'), 'session'), el('button', { class: 'btn ghost', onclick: stop(() => { S.ask = ''; render() }) }, 'Cancel')]
+      : [el('button', { class: 'btn dghost', onclick: stop(() => { S.ask = s.handle; render() }) }, 'End session'), el('button', { class: 'btn out', onclick: stop(() => goTo(s.handle)) }, 'Go', el('span', { class: 'lw' }, 'to session'), arrow())])
+  return el('div', { class: ['c', s.status, asking && !op && 'ask', !op && flash.get(key(s)), op && 'op ' + op + (op === 'ended' || op === 'moved' ? ' fin' : ''), landing === key(s) && 'landing'].filter(Boolean).join(' '), 'data-k': key(s), onclick: () => { if (!justDragged) openDetail(s) } },
     el('div', { class: 'hd' }, el('span', { class: 'st' }, LABEL[s.status] || s.status), s.model ? el('span', { class: 'md' }, s.model) : null, el('span', { class: 'tm' }, ago(s.since))),
+    op ? el('div', { class: 'opl' }, op === 'ended' || op === 'moved' ? el('i', { class: 'okm' }) : el('i', { class: 'spin' }), OPL[op]) : null,
     el('div', { class: 'ti' }, s.title || '(untitled)'),
     s.stuck ? el('div', { class: 'warn' }, 'No progress for a while') : null,
     s.fail ? el('div', { class: 'warn' }, 'Summary failed') : null,
@@ -334,11 +349,15 @@ function renderList() {
     if (!groups.has(g)) groups.set(g, [])
     groups.get(g).push(s)
   }
+  let ents = [...groups]
+  if (ops.size) for (const g of colOrder) if (!groups.has(g) && !S.shut.has(g)) ents.push([g, []]) // 빈 칸도 처리 끝날 때까지 자리를 지킨다
+  if (ops.size && colOrder.length) { const at = (g) => { const i = colOrder.indexOf(g); return i < 0 ? 1e9 : i }; ents.sort((x, y) => at(x[0]) - at(y[0])) }
+  colOrder = ents.map((e) => e[0])
   const body = groups.size
-    ? [...groups].map(([g, list]) => {
+    ? ents.map(([g, list]) => {
         const shut = S.shut.has(g)
-        const wid = group === 'ai' ? 'group:' + g : list[0].wid
-        return el('div', { class: 'ws' + (shut ? ' shut' : ''), 'data-wid': wid },
+        const wid = group === 'ai' ? 'group:' + g : (list[0] || {}).wid || ''
+        return el('div', { class: 'ws' + (shut ? ' shut' : ''), 'data-wid': wid, 'data-g': g },
           el('button', { class: 'wsh', onclick: () => { shut ? S.shut.delete(g) : S.shut.add(g); render() } }, g, el('span', { class: 'n' }, list.length), el('i', { class: 'chev car' + (shut ? ' right' : '') })),
           shut ? null : el('div', { class: 'cards' }, list.map(card)))
       })
@@ -387,8 +406,71 @@ function renderDetail(s) {
     el('div', { class: 'dfade' }, el('button', { class: 'backf', title: 'Back to board (Esc)', onclick: closeDetail }, el('i', { class: 'chev' }), 'Board'))]
 }
 
+// ---------- 움직임 ----------
+// 다시 그리기 전에 카드·칸 자리를 재 두고, 그린 뒤 옛 자리에서 새 자리로 미끄러지게 한다(FLIP).
+// 사라진 카드는 제자리에서 흐려지며 줄어든다. 탭·정렬·묶기를 바꿀 때는 움직이지 않는다
+const calm = matchMedia('(prefers-reduced-motion: reduce)')
+const EASE = 'cubic-bezier(.2,.8,.2,1)'
+let lastSig = '', flyFrom = null, landing = '', colOrder = []
+const ops = new Map() // 처리 중인 카드: move → moved, end → ended
+const OPL = { move: 'Moving…', moved: 'Moved', end: 'Ending session…', ended: 'Ended' }
+let hold = 0 // 카드가 접히는 동안은 자동 갱신으로 다시 그리지 않는다
+const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+const cardEl = (k) => document.querySelector('.board .c[data-k="' + CSS.escape(k) + '"]')
+const pend = new Map() // 옮긴 카드: 서버가 따라올 때까지 새 칸에 둔다 { ws, wid, until }
+const gone = new Map() // 끝낸 카드: 서버에서 빠질 때까지 숨긴다 (만료 시각)
+function snap() {
+  const cards = new Map(), cols = new Map()
+  document.querySelectorAll('.board .c[data-k]').forEach((n) => cards.set(n.dataset.k, { r: n.getBoundingClientRect(), n }))
+  document.querySelectorAll('.board .ws[data-g]').forEach((n) => { const r = n.getBoundingClientRect(); r.n = n; cols.set(n.dataset.g, r) })
+  if (flyFrom && cards.has(flyFrom.k)) cards.get(flyFrom.k).r = flyFrom.r
+  flyFrom = null
+  return { cards, cols }
+}
+function flip(b) {
+  const colD = new Map()
+  const now = [...document.querySelectorAll('.board .c[data-k]')].map((n) => [n, n.getBoundingClientRect()]) // 움직이기 전에 먼저 다 잰다
+  document.querySelectorAll('.board .ws[data-g]').forEach((n) => {
+    const a = b.cols.get(n.dataset.g)
+    if (!a) { n.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, easing: 'ease-out' }); return }
+    const r = n.getBoundingClientRect(), dx = a.left - r.left, dy = a.top - r.top
+    colD.set(n, [dx, dy])
+    const kf = [{}, {}]
+    if (dx || dy) { kf[0].transform = 'translate(' + dx + 'px,' + dy + 'px)'; kf[1].transform = 'none' }
+    if (Math.abs(a.height - r.height) > 1) { kf[0].height = a.height + 'px'; kf[1].height = r.height + 'px'; n.style.overflow = 'hidden' }
+    if (kf[0].transform || kf[0].height) n.animate(kf, { duration: 300, easing: EASE }).onfinish = () => { n.style.overflow = '' }
+  })
+  now.forEach(([n, r]) => {
+    const a = b.cards.get(n.dataset.k); if (!a) return
+    b.cards.delete(n.dataset.k)
+    if (n.dataset.k === landing) return // 손에 든 카드가 직접 날아간다
+    const [cx, cy] = colD.get(n.closest('.ws')) || [0, 0]
+    const dx = a.r.left - r.left - cx, dy = a.r.top - r.top - cy
+    if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) n.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 300, easing: EASE })
+  })
+  const live = new Set([...document.querySelectorAll('.board .ws[data-g]')].map((n) => n.dataset.g))
+  for (const [g, r] of b.cols) { // 사라진 칸
+    if (live.has(g) || !r.width) continue
+    const n = r.n
+    n.querySelectorAll('.c[data-k]').forEach((c) => { if (b.cards.has(c.dataset.k)) b.cards.delete(c.dataset.k); else c.style.visibility = 'hidden' }) // 옮겨 간 카드는 빈자리로
+    Object.assign(n.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: 0, zIndex: 4, pointerEvents: 'none' })
+    document.body.append(n)
+    n.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.96)' }], { duration: 260, easing: 'ease-in', fill: 'forwards' }).onfinish = () => n.remove()
+  }
+  for (const { r, n } of b.cards.values()) { // 사라진 카드
+    if (!r.width || r.height < 4) continue
+    n.classList.remove('dragging', 'changed', 'fresh')
+    Object.assign(n.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', margin: 0, zIndex: 5, pointerEvents: 'none' })
+    document.body.append(n)
+    n.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'scale(.94)' }], { duration: 220, easing: 'ease-in', fill: 'forwards' }).onfinish = () => n.remove()
+  }
+}
+
 function render() {
   const keepY = window.scrollY
+  const sigNow = S.view === 'list' && S.data ? [S.filter, S.data.group_by, S.data.sort].join('|') : ''
+  const before = sigNow && sigNow === lastSig && !calm.matches ? snap() : null
+  lastSig = sigNow
   app.replaceChildren()
   if (!S.data) {
     app.append(el('p', { class: 'empty' }, S.error === 'offline'
@@ -400,16 +482,30 @@ function render() {
   if (S.view === 'detail' && !s) S.view = 'list'
   app.append(...[S.view === 'detail' ? renderDetail(s) : renderList()].flat(3).filter(Boolean))
   window.scrollTo(0, keepY)
+  if (before) flip(before)
   flash = new Map() // 한 번만 반짝인다(클릭으로 다시 그릴 때 또 반짝이지 않게)
 }
 
 function openDetail(s) { S.listY = window.scrollY; S.view = 'detail'; S.sel = key(s); S.ask = ''; S.menu = false; render(); window.scrollTo(0, 0) }
 function closeDetail() { S.view = 'list'; S.ask = ''; render(); window.scrollTo(0, S.listY) }
 
+function settle(d) {
+  const now = Date.now()
+  d.sessions = (d.sessions || []).filter((s) => { const u = gone.get(key(s)); if (u && now < u) return false; gone.delete(key(s)); return true })
+  for (const k of gone.keys()) if (!d.sessions.some((s) => key(s) === k) && now >= gone.get(k)) gone.delete(k)
+  for (const s of d.sessions) {
+    const o = pend.get(key(s)); if (!o) continue
+    if (s.ws === o.ws || now > o.until) {
+      pend.delete(key(s))
+      if (s.ws === o.ws && ops.get(key(s)) === 'move') { const k = key(s); ops.set(k, 'moved'); setTimeout(() => { if (ops.get(k) === 'moved') { ops.delete(k); render() } }, 900) } else ops.delete(key(s))
+    } else { s.ws = o.ws; s.wid = o.wid }
+  }
+}
 async function load() {
   try {
     const r = await orca.plugin.request('spyhop.state', {})
-    if (r.error) { S.error = r.error; S.data = null } else { S.error = ''; S.data = r.state }
+    var opsBefore = [...ops].join()
+    if (r.error) { S.error = r.error; S.data = null } else { S.error = ''; S.data = r.state; settle(S.data) }
   } catch (e) { S.error = (e && e.message) || 'Could not reach the worker'; S.data = null }
   // 바뀐 카드는 테두리가 잠깐 빛나고, 새 카드는 미끄러져 들어온다(첫 화면은 그대로)
   flash = new Map()
@@ -418,6 +514,7 @@ async function load() {
     if (seen) for (const [k, v] of now) { if (!seen.has(k)) flash.set(k, 'fresh'); else if (seen.get(k) !== v) flash.set(k, 'changed') }
     seen = now
   }
+  if (hold || (ops.size && [...ops].join() === opsBefore && S.data)) return
   if (S.menu || drag || S.dialog) return // 메뉴·창을 열었거나 카드를 끄는 동안은 다시 그리지 않는다
   render()
 }
@@ -425,12 +522,42 @@ async function loadCfg() { S.cfg = await req('spyhop.getConfig', {}).catch(() =>
 function applyPal() { if (S.pal === 'orca') delete document.documentElement.dataset.pal; else document.documentElement.dataset.pal = S.pal }
 async function setPal(id) { S.pal = id; applyPal(); render(); try { await orca.storage.set('palette', id) } catch {} }
 async function setConfig(c) { await req('spyhop.config', c).catch(() => null); await load() }
-async function moveTo(s, wid) {
+async function moveTo(s, wid, fly) {
   const ai = wid.startsWith('group:')
-  if (!ai && s.status !== 'wait') { toast('This session is working. Move it after it stops.'); return }
+  if (!ai && s.status !== 'wait') { toast('This session is working. Move it after it stops.'); if (fly) flyBack(fly); return }
+  const col = document.querySelector('.board .ws[data-wid="' + CSS.escape(wid) + '"]')
+  const ws = ai ? wid.slice(6) : col && col.dataset.g
+  const k = key(s)
+  ops.set(k, 'move')
+  if (ws) {
+    const old = { ws: s.ws, wid: s.wid }
+    s.ws = ws; s.wid = wid
+    pend.set(k, { ws, wid, until: Date.now() + 20000, old })
+    if (fly) landing = k
+    render()
+    if (fly) land(fly, k)
+  } else { if (fly) fly.remove(); render() }
   const r = await req('spyhop.move', { h: s.handle, wid }).catch(() => null)
   if (r) toast(ai ? 'Moved in Spyhop only. The Orca pane stays where it is.' : (r.result || 'Moved'))
+  else { const o = pend.get(k); pend.delete(k); ops.delete(k); if (o) { s.ws = o.old.ws; s.wid = o.old.wid }; render(); toast('Could not move that session') }
+  if (!pend.has(k) && ops.get(k) === 'move') ops.delete(k)
   await load()
+  if (pend.has(k)) setTimeout(load, 1500) // 서버가 늦으면 조금 뒤 한 번 더 확인
+}
+// 손에 든 카드를 새 자리까지 날려 내려놓고, 그 순간 진짜 카드로 바꾼다
+function land(f, k) {
+  const c = document.querySelector('.board .c[data-k="' + CSS.escape(k) + '"]')
+  const done = () => { f.remove(); landing = ''; const n = document.querySelector('.board .c[data-k="' + CSS.escape(k) + '"]'); if (n) n.classList.remove('landing') }
+  if (!c || calm.matches) { done(); return }
+  const t = c.getBoundingClientRect()
+  f.style.width = t.width + 'px'
+  f.animate([{ transform: f.style.transform, scale: '1.03', rotate: '-1.5deg', boxShadow: '0 18px 40px rgba(0,0,0,.5)' }, { transform: 'translate(' + t.left + 'px,' + t.top + 'px)', scale: '1', rotate: '0deg', boxShadow: '0 0 0 rgba(0,0,0,0)' }],
+    { duration: 300, easing: EASE, fill: 'forwards' }).onfinish = done
+}
+function flyBack(f, to) { // 놓을 수 없으면 원래 자리로 돌아간다
+  const t = to && to.getBoundingClientRect()
+  if (!t || calm.matches) { f.remove(); return }
+  f.animate([{ transform: f.style.transform, scale: '1.03', rotate: '-1.5deg', boxShadow: '0 18px 40px rgba(0,0,0,.5)' }, { transform: 'translate(' + t.left + 'px,' + t.top + 'px)', scale: '1', rotate: '0deg', boxShadow: '0 0 0 rgba(0,0,0,0)' }], { duration: 240, easing: EASE, fill: 'forwards' }).onfinish = () => { f.remove(); to.classList.remove('dragging') }
 }
 
 // ---------- 카드 끌어 옮기기 (보드와 같은 동작) ----------
@@ -456,7 +583,7 @@ document.addEventListener('pointermove', (e) => {
   }
   if (!drag) return
   e.preventDefault()
-  drag.float.style.transform = 'translate(' + (e.clientX - drag.dx) + 'px,' + (e.clientY - drag.dy) + 'px) rotate(2deg)'
+  drag.float.style.transform = 'translate(' + (e.clientX - drag.dx) + 'px,' + (e.clientY - drag.dy) + 'px)'
   const col = colAt(e.clientX, e.clientY)
   document.querySelectorAll('.ws.drop').forEach((n) => { if (n !== col) n.classList.remove('drop') })
   if (col && col !== drag.from) col.classList.add('drop')
@@ -469,12 +596,13 @@ document.addEventListener('pointerup', (e) => {
   setTimeout(() => { justDragged = false }, 60)
   const col = colAt(e.clientX, e.clientY)
   document.querySelectorAll('.ws.drop').forEach((n) => n.classList.remove('drop'))
-  d.float.remove(); d.el.classList.remove('dragging'); document.body.classList.remove('dragging-on')
+  document.body.classList.remove('dragging-on')
   const ghost = document.querySelector('.ws.newcol')
-  if (!col || col === d.from) { if (ghost) ghost.remove(); return }
-  if (col.classList.contains('newcol')) { askNew(d.s, col.dataset.wid === 'pick:'); return }
+  if (!col || col === d.from) { if (ghost) ghost.remove(); flyBack(d.float, d.el); return }
+  d.el.classList.remove('dragging')
+  if (col.classList.contains('newcol')) { d.float.remove(); askNew(d.s, col.dataset.wid === 'pick:'); return }
   if (ghost) ghost.remove()
-  moveTo(d.s, col.dataset.wid)
+  moveTo(d.s, col.dataset.wid, d.float)
 })
 function colAt(x, y) { const n = document.elementFromPoint(x, y); return n && n.closest ? n.closest('.board .ws') : null }
 function startDrag(c, s, p0) {
@@ -482,6 +610,7 @@ function startDrag(c, s, p0) {
   f.classList.add('floating'); f.style.width = r.width + 'px'
   f.style.transform = 'translate(' + r.left + 'px,' + r.top + 'px)'
   document.body.appendChild(f)
+  if (!calm.matches) f.animate([{ scale: '1', rotate: '0deg', boxShadow: '0 0 0 rgba(0,0,0,0)' }, { scale: '1.03', rotate: '-1.5deg', boxShadow: '0 18px 40px rgba(0,0,0,.5)' }], { duration: 160, easing: EASE }) // 집는 순간 살짝 들어 올린다
   drag = { s, el: c, from: c.closest('.ws'), float: f, dx: p0.x - r.left, dy: p0.y - r.top }
   c.classList.add('dragging'); document.body.classList.add('dragging-on'); justDragged = true
   // 끝에 점선 칸 하나: AI 주제면 새 칸, 워크스페이스면 세션 없는 워크스페이스 고르기(오르카 밖 세션·작업 중이면 없음)
@@ -533,9 +662,32 @@ function askNew(s, pick) {
 async function goTo(h) { const r = await req('spyhop.switch', { handle: h }).catch(() => null); if (r && !r.ok) toast('Could not open that session') }
 async function endSession(h) {
   S.ask = ''
+  const s = (S.data && S.data.sessions || []).find((x) => x.handle === h)
+  if (S.view === 'detail' && s && key(s) === S.sel) closeDetail()
+  if (s) ops.set(key(s), 'end')
+  render()
   const r = await req('spyhop.close', { handle: h }).catch(() => null)
-  if (r && r.ok) { toast('Session ended'); if (S.view === 'detail') closeDetail() }
-  await load()
+  if (!(r && r.ok)) { if (s) ops.delete(key(s)); render(); toast('Could not end that session'); return }
+  if (s) {
+    const k = key(s)
+    gone.set(k, Date.now() + 15000)
+    hold++
+    try {
+      ops.set(k, 'ended'); render()
+      await wait(550)
+      const n = cardEl(k)
+      if (n && !calm.matches) {
+        const cs = getComputedStyle(n)
+        await n.animate([
+          { height: n.offsetHeight + 'px', marginTop: cs.marginTop, paddingTop: cs.paddingTop, paddingBottom: cs.paddingBottom, opacity: 1, transform: 'none' },
+          { height: '0px', marginTop: '0px', paddingTop: '0px', paddingBottom: '0px', opacity: 0, transform: 'translateX(24px)' }],
+          { duration: 360, easing: EASE, fill: 'forwards' }).finished
+      }
+      ops.delete(k); S.data.sessions = S.data.sessions.filter((x) => key(x) !== k)
+    } finally { hold-- }
+    render()
+  }
+  load()
 }
 async function toggle(log, t) {
   const done = t.state !== 'done'
